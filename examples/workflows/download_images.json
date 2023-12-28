@@ -1,0 +1,36 @@
+{
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "name": "common.parameters",
+      "data": {
+        "params": {
+          "urls": [
+            "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/03/31/19/20/dog-4988985_1280.jpg"
+          ],
+          "save_prefix": "image"
+        }
+      }
+    },
+    {
+      "key": "save",
+      "name": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.urls",
+          "dst_hierarchy": "urls"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ]
+    }
+  ]
+}
