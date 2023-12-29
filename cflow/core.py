@@ -97,6 +97,41 @@ class Injection:
 
 @dataclass
 class Schema:
+    """
+    A class that represents a Schema of a node.
+
+    Implement `get_schema` method and return a `Schema` instance for your nodes
+    can help us auto-generate UIs, APIs and documents.
+
+    Attributes
+    ----------
+    input_model : Optional[Type[BaseModel]]
+        The input data model of the node.
+        > If your inputs are not JSON serializable, you can use `input_names` instead.
+    output_model : Optional[Type[BaseModel]]
+        The output data model of the node.
+        > If your outputs are not JSON serializable, you can use either `api_output_model`
+        or `output_names` instead.
+    api_output_model : Optional[Type[BaseModel]]
+        The API response data model of the node.
+        > This is helpful when your outputs are not JSON serializable, and you implement
+        the `get_api_response` method to convert the outputs to API responses.
+        > In this case, `api_output_model` should be the data model of the results returned
+        by `get_api_response`.
+    input_names : Optional[List[str]]
+        The names of the inputs of the node.
+        > This is helpful if you want to make things simple.
+        > Please make sure that the input `data` of the node has exactly the same keys as `input_names`.
+    output_names : Optional[List[str]]
+        The names of the outputs of the node.
+        > This is helpful if you want to make things simple.
+        > Please make sure that the output `results` of the node has exactly the same keys as `output_names`.
+    description : Optional[str]
+        A description of the node.
+        > This will be displayed in the auto-generated UIs / documents.
+
+    """
+
     input_model: Optional[Type[BaseModel]] = None
     output_model: Optional[Type[BaseModel]] = None
     api_output_model: Optional[Type[BaseModel]] = None
