@@ -145,6 +145,14 @@ class GatherNode(Node):
     flow: Optional[Flow] = None
 
     @classmethod
+    def get_schema(cls) -> Schema:
+        return Schema(
+            description="A node that is used to gather other nodes' results.\n"
+            "> - This is useful when you have multiple targets to collect results from.\n"
+            "> - If you are programming in Python, you can use `flow.gather` to make things easier.",
+        )
+
+    @classmethod
     async def get_api_response(cls, results: Dict[str, Any]) -> Dict[str, Any]:
         if cls.flow is None:
             console.warn(
