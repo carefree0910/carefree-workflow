@@ -108,6 +108,19 @@ def render(*, file: str, output: str) -> None:
     rendered.save(output)
 
 
+@main.command()
+@click.option(
+    "-o",
+    "--output",
+    default="docs.md",
+    show_default=True,
+    type=str,
+    help="The output markdown file path, should end with `.md`.",
+)
+def docs(*, output: str) -> None:
+    cflow.generate_documents(output)
+
+
 __all__ = [
     "run_execute",
 ]

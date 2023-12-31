@@ -1,3 +1,11 @@
+"""
+Sleep example.
+
+This example implements `SleepNode` / `AsyncSleepNode` which takes a `time` as input and returns a `message` as output.
+Then, the `EchoNode` is used to print out the results from `SleepNode`.
+This example also uses `render_workflow` to render the workflow graph, and `dump` to dump the workflow to a JSON file.
+"""
+
 import time
 import asyncio
 

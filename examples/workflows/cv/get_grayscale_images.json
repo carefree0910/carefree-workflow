@@ -1,4 +1,5 @@
 {
+  "$description": "Get grayscale images from the given urls.\n- Adjust the `urls` and `save_prefix` in the first `node` to process different images and save with different prefixes.\n- The images will be processed concurrently.",
   "target": "save",
   "intermediate": [],
   "verbose": true,

@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 
 from PIL import Image
-from enum import Enum
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
@@ -24,6 +24,8 @@ from cftool.misc import shallow_copy_dict
 from cftool.geometry import Matrix2D
 
 from .common import TImage
+from .common import DocEnum
+from .common import DocModel
 from .common import ImageModel
 from .common import IImageNode
 from .common import IWithImageNode
@@ -34,25 +36,25 @@ from ..core import Schema
 # common
 
 
-class WHModel(BaseModel):
+class WHModel(DocModel):
     w: int = Field(..., description="Width of the output image.")
     h: int = Field(..., description="Height of the output image")
 
 
-class LTRBModel(BaseModel):
+class LTRBModel(DocModel):
     lt_rb: Tuple[int, int, int, int] = Field(
         ...,
         description="The left-top and right-bottom points.",
     )
 
 
-class ResizeMode(str, Enum):
+class ResizeMode(str, DocEnum):
     FILL = "fill"
     FIT = "fit"
     COVER = "cover"
 
 
-class Resampling(str, Enum):
+class Resampling(str, DocEnum):
     NEAREST = "nearest"
     BOX = "box"
     BILINEAR = "bilinear"
@@ -61,11 +63,11 @@ class Resampling(str, Enum):
     LANCZOS = "lanczos"
 
 
-class ResamplingModel(BaseModel):
+class ResamplingModel(DocModel):
     resampling: Resampling = Field(Resampling.BILINEAR, description="The resampling.")
 
 
-class BaseAffineModel(BaseModel):
+class BaseAffineModel(DocModel):
     a: float = Field(..., description="`a` of the affine matrix")
     b: float = Field(..., description="`b` of the affine matrix")
     c: float = Field(..., description="`c` of the affine matrix")
@@ -559,6 +561,13 @@ class PasteNode(IWithImageNode):
 
 
 __all__ = [
+    "ResizeMode",
+    "Resampling",
+    "WHModel",
+    "LTRBModel",
+    "ResizeMode",
+    "ResamplingModel",
+    "BaseAffineModel",
     "BinaryOpNode",
     "BlurNode",
     "InverseNode",

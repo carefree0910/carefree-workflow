@@ -1,4 +1,5 @@
 {
+  "$description": "Get resized images from the given urls.\n- Adjust the `urls` and `save_prefix` in the first `node` to process different images and save with different prefixes.\n- Adjust the `target_w`, `target_h` and `resize_mode` in the first `node` to control the resize behaviour.\n- The images will be processed concurrently.",
   "target": "save",
   "intermediate": [],
   "verbose": true,

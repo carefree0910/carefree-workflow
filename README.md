@@ -3,13 +3,21 @@
 `carefree-workflow` is a lightweight library for building arbitray workflows with Python.
 
 
+## Agent Friendly
+
+With the rapid development of AI (namely, the GPTs), I think modern libraries should be **agent-friendly**, which means developers should be able to build a GPT-agent on top of their libraries **automatically**, and after which users should be able to learn the library by interacting with this GPT-agent via natural language. With this in mind, `carefree-workflow` is designed to be modular, extensible, and automated. See [Highlights](#highlights) for more details.
+
+
 ## Highlights
 
 - **Async**: `async` is by design.
 - **Parallel**: nodes can be executed in parallel.
 - **Powerful**: complex locks / logics / dependencies can be handled.
   - You can even perform a loop with loop backs in the workflow!
-- **Servable**: all nodes, as well as the workflow itself, can be automatically turned into RESTful APIs.
+- **Automated**:
+  - All nodes, as well as the workflow itself, can be **automatically** turned into RESTful APIs.
+  - Detailed [documentation](https://github.com/carefree0910/carefree-workflow/tree/main/docs.md) of the design / nodes / workflow / ... can be **automatically** generated, which makes this library and its extended versions agent-friendly.
+    - That is to say, you can build a GPT-agent on top of this library by simply feed the auto-generated documentation ([this](https://github.com/carefree0910/carefree-workflow/tree/main/docs.md)) to it. After which, you can interact with the agent via natural language and it will tell you how to build the workflow you want (it may even be able to give you the final workflow JSON directly)!
 - **Extensible**: you can easily extend the library with your own nodes.
 - **Serializable**: the workflow can be serialized into / deserialized from a single JSON file.
 - **Human Readable**: the workflow JSON file is human readable and easy to understand.
@@ -103,6 +111,18 @@ Running the above codes will yield something like:
 ```
 
 > More code snippets can be found in [`examples`](https://github.com/carefree0910/carefree-workflow/tree/main/examples).
+
+### Documentation
+
+`carefree-workflow` can automatically generate documentation for you:
+
+```bash
+cflow docs -o <document_output_file>
+```
+
+> We also include the auto-generated documentation in this repository, see [`docs.md`](https://github.com/carefree0910/carefree-workflow/tree/main/docs.md).
+
+And we have designed this auto-generated documentation to be agent-friendly, which means you can build a GPT-agent on top of this library by simply feed the auto-generated documentation to it. After which, you can interact with the agent via natural language and it will tell you how to build the workflow you want (it may even be able to give you the final workflow JSON directly)!
 
 
 ## Serving

@@ -3,6 +3,7 @@
 import asyncio
 
 from PIL import Image
+from enum import Enum
 from cftool import console
 from typing import Any
 from typing import Dict
@@ -192,6 +193,14 @@ class GatherNode(Node):
 # common fields / data models
 
 
+class DocEnum(Enum):
+    """A class that tells use to include it in the documentation"""
+
+
+class DocModel(BaseModel):
+    """A class that tells use to include it in the documentation"""
+
+
 class ImageField(Image.Image):
     @classmethod
     def __get_pydantic_core_schema__(cls, *args: Any) -> core_schema.CoreSchema:
@@ -207,11 +216,11 @@ class ImageField(Image.Image):
 TImage = Union[str, ImageField]
 
 
-class ImageModel(BaseModel):
+class ImageModel(DocModel):
     url: TImage = Field(..., description="The url / PIL.Image instance of the image.")
 
 
-class ImageAPIOuput(BaseModel):
+class ImageAPIOuput(DocModel):
     image: str = Field(..., description="The base64 encoded image.")
 
 
@@ -393,6 +402,8 @@ __all__ = [
     "LoopNode",
     "GatherNode",
     "TImage",
+    "DocEnum",
+    "DocModel",
     "ImageModel",
     "ImageAPIOuput",
     "IImageNode",

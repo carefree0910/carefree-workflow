@@ -1,3 +1,12 @@
+"""
+Hello world example.
+
+This example implements a `HelloNode` which takes a `name` as input and returns the `name` and a `greeting` as outputs.
+Then, the `EchoNode` is used to print out the results from `HelloNode`.
+This example also uses `render_workflow` to render the workflow graph, and `dump` to dump the workflow to a JSON file.
+It also shows how to load a workflow from a JSON file.
+"""
+
 import asyncio
 
 from cflow import *
@@ -42,6 +51,7 @@ async def main() -> None:
     results = await flow.execute("Echo")
     render_workflow(flow).save("workflow.png")
     flow.dump("workflow.json")
+    # Should print something like: {'A': {'name': 'foo', ...}, 'B': {...}, 'Echo': {...}}
     print("> Results:", dict(results))
 
 

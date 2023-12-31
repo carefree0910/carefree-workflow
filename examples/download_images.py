@@ -1,3 +1,11 @@
+"""
+Download images example.
+
+This example shows how to use `DownloadImageNode` to download multiple images concurrently.
+It also shows how to use `gather` to wait for multiple nodes to finish, and how the results are organized.
+It also uses `render_workflow` to render the workflow graph, and `dump` to dump the workflow to a JSON file.
+"""
+
 import asyncio
 
 from cflow import *

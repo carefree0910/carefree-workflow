@@ -1,4 +1,5 @@
 {
+  "$description": "Get blurred images from the given urls.\n- Adjust the `urls` and `save_prefix` in the first `node` to process different images and save with different prefixes.\n- Adjust the `blur_radius` in the first `node` to control the blur strength.\n- The images will be processed concurrently.",
   "target": "save",
   "intermediate": [],
   "verbose": true,

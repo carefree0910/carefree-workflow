@@ -1,4 +1,5 @@
 {
+  "$description": "Save images from urls.\n- Adjust the `urls` and `save_prefix` in the first `node` to save different images with different prefixes.\n- The images will be saved concurrently.",
   "target": "save",
   "intermediate": [],
   "verbose": true,

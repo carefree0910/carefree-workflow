@@ -606,9 +606,13 @@ class Flow(Bundle[Node]):
         Returns
         -------
         dict
-            A dictionary containing the results of the execution. If an exception occurs
-            during the execution, the dictionary will contain a key 'EXCEPTION_MESSAGE_KEY'
-            with the error message as the value.
+            A dictionary containing the results of the execution.
+            - If `return_api_response` is `True`, only outputs of the `target` node can be accessed
+            (via `results[target]`).
+            - Otherwise, outputs of all nodes can be accessed (via `results[key]`, where `key` is
+            the key of the node).
+            - If an exception occurs during the execution, the dictionary will contain
+            a key 'EXCEPTION_MESSAGE_KEY' with the error message as the value.
 
         """
 

@@ -1,0 +1,3 @@
+include examples/*.py
+include examples/workflows/*.json
+include examples/workflows/*/*.json
