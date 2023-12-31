@@ -206,6 +206,9 @@ __all__ = [
     "register_api",
     "register_nodes_api",
     "register_workflow_api",
+    "SrcKey",
+    "InjectionModel",
+    "NodeModel",
     "WorkflowModel",
     "API",
 ]

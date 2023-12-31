@@ -381,6 +381,7 @@ class SaveImagesNode(IWithImageNode):
 
 
 __all__ = [
+    "LoopBackInjection",
     "LoopNode",
     "GatherNode",
     "TImage",
