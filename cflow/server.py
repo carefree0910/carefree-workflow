@@ -107,9 +107,9 @@ class NodeModel(BaseModel):
         ...,
         description="The key of the node, should be unique with respect to the workflow.",
     )
-    name: str = Field(
+    type: str = Field(
         ...,
-        description="The name of the node, should be the one when registered.",
+        description="The type of the node, should be the one when registered.",
     )
     data: Dict[str, Any] = Field(
         default_factory=dict,
@@ -142,7 +142,7 @@ class WorkflowModel(BaseModel):
     def get_workflow(self) -> Flow:
         workflow_json = []
         for node in self.model_dump()["nodes"]:
-            node_json = dict(type=node.pop("name"), info=node)
+            node_json = dict(type=node.pop("type"), info=node)
             workflow_json.append(node_json)
         return Flow.from_json(workflow_json)
 

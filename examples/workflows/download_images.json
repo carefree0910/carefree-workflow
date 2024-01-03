@@ -6,7 +6,7 @@
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -19,7 +19,7 @@
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "params",

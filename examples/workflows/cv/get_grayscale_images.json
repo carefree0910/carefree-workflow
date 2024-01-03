@@ -6,7 +6,7 @@
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -19,7 +19,7 @@
     },
     {
       "key": "download",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "params",
@@ -35,7 +35,7 @@
     },
     {
       "key": "grayscale",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "download",
@@ -51,7 +51,7 @@
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "grayscale",
