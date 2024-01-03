@@ -15,6 +15,10 @@ class DocModel(BaseModel):
     """A class that tells use to include it in the documentation"""
 
 
+class TextModel(DocModel):
+    text: str = Field(..., description="The text.")
+
+
 class ImageField(Image.Image):
     @classmethod
     def __get_pydantic_core_schema__(cls, *args: Any) -> core_schema.CoreSchema:

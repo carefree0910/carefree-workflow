@@ -429,6 +429,13 @@ class Resampling(str, DocEnum):
 
 ## Common Data Models
 
+### `TextModel`
+
+```python
+class TextModel(DocModel):
+    text: str = Field(..., description="The text.")
+```
+
 ### `ImageModel`
 
 ```python
