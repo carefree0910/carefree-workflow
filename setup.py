@@ -7,6 +7,13 @@ DESCRIPTION = "Build arbitray workflows with Python!"
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
+openai_requires = [
+    "openai",
+]
+ai_requires = [
+    "facexlib",
+    "carefree-learn[cv_full]>=0.5.0",
+]
 setup(
     name=PACKAGE_NAME,
     version=VERSION,
@@ -25,6 +32,10 @@ setup(
         "click>=8.1.3",
         "carefree-toolkit>=0.3.11",
     ],
+    extras_require={
+        "openai": openai_requires,
+        "full": openai_requires + ai_requires,
+    },
     author="carefree0910",
     author_email="syameimaru.saki@gmail.com",
     description=DESCRIPTION,
