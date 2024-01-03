@@ -366,9 +366,9 @@ class NodeModel(BaseModel):
         ...,
         description="The key of the node, should be unique with respect to the workflow.",
     )
-    name: str = Field(
+    type: str = Field(
         ...,
-        description="The name of the node, should be the one when registered.",
+        description="The type of the node, should be the one when registered.",
     )
     data: Dict[str, Any] = Field(
         default_factory=dict,
@@ -1608,6 +1608,121 @@ class PasteNode(IWithImageNode):
         return {"rgb": rgb, "mask": mask, "pasted": pasted}
 ```
 
+## OpenAIImageToTextNode
+
+### Description
+
+Image captioning with OpenAI API.
+
+### Inputs
+
+```python
+class OpenAIImageToTextInput(ImageModel):
+    prompt: Optional[str] = Field(None, description="Prompt for image captioning.")
+```
+
+### Functional Outputs
+
+```python
+class TextModel(DocModel):
+    text: str = Field(..., description="The text.")
+```
+
+### API Outputs
+
+*Same as the functional outputs.*
+
+### Source Codes
+
+```python
+@Node.register("openai.img2txt")
+class OpenAIImageToTextNode(IWithOpenAINode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        return Schema(
+            OpenAIImageToTextInput,
+            TextModel,
+            description="Image captioning with OpenAI API.",
+        )
+
+    async def execute(self) -> Dict[str, str]:
+        image = await self.get_image_from("url")
+        image_url = await self.openai_client.upload(image)
+        prompt = self.data["prompt"]
+        if prompt is None:
+            prompt = "Describe this image to a person with impaired vision. Be short and concise."
+        caption = await self.openai_client.client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            max_tokens=512,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": image_url}},
+                    ],
+                },
+            ],
+        )
+        caption = caption.choices[0].message.content
+        if not caption:
+            raise RuntimeError("Empty or missing caption.")
+        return {"text": caption}
+```
+
+## OpenAITextToImageNode
+
+### Description
+
+Image generation with OpenAI API.
+
+### Inputs
+
+```python
+class OpenAITextToImageInput(TextModel):
+    size: str = Field("1024x1024", description="Image size.")
+    model: str = Field("dall-e-3", description="Model name.")
+    quality: str = Field("standard", description="Image quality.")
+```
+
+### Functional Outputs
+
+```python
+class OpenAITextToImageOutput(BaseModel):
+    image_url: str = Field(..., description="The url of the generated image.")
+```
+
+### API Outputs
+
+*Same as the functional outputs.*
+
+### Source Codes
+
+```python
+@Node.register("openai.txt2img")
+class OpenAITextToImageNode(IWithOpenAINode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        return Schema(
+            OpenAITextToImageInput,
+            OpenAITextToImageOutput,
+            description="Image generation with OpenAI API.",
+        )
+
+    async def execute(self) -> Dict[str, str]:
+        response = await self.openai_client.client.images.generate(
+            model=self.data["model"],
+            size=self.data["size"],
+            quality=self.data["quality"],
+            n=1,
+            prompt=self.data["text"],
+        )
+        image_url = response.data[0].url
+        if not image_url:
+            raise RuntimeError("Empty or missing image url.")
+        return {"image_url": image_url}
+```
+
 
 # Examples
 
@@ -1684,6 +1799,41 @@ async def load(path: str = "workflow.json") -> None:
 if __name__ == "__main__":
     asyncio.run(main())
     asyncio.run(load())
+```
+
+### `examples/openai_image_variation.py`
+
+```python
+"""
+Image variation example.
+
+This example shows how to use `OpenAI` nodes to generate a variation of the given image. Please:
+> - set `OPENAI_API_KEY` environment variable
+> - install with `pip install carefree-workflow[openai]` or `pip install carefree-workflow[full]`
+
+to run this example.
+"""
+
+import asyncio
+
+from cflow import *
+
+
+async def main() -> None:
+    cat_url = "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg"
+    injections = [Injection("img2txt", "text", "text")]
+    flow = (
+        Flow()
+        .push(OpenAIImageToTextNode("img2txt", dict(url=cat_url)))
+        .push(OpenAITextToImageNode("txt2img", injections=injections))
+    )
+    results = await flow.execute("txt2img", verbose=True)
+    render_workflow(flow).save("workflow.png")
+    print("> generated image url:", results["txt2img"]["image_url"])
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### `examples/download_images.py`
@@ -1811,7 +1961,7 @@ Save images from urls.
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -1824,7 +1974,7 @@ Save images from urls.
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "params",
@@ -1857,7 +2007,7 @@ Get blurred images from the given urls.
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -1871,7 +2021,7 @@ Get blurred images from the given urls.
     },
     {
       "key": "download",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "params",
@@ -1887,7 +2037,7 @@ Get blurred images from the given urls.
     },
     {
       "key": "blur",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "download",
@@ -1908,7 +2058,7 @@ Get blurred images from the given urls.
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "blur",
@@ -1921,6 +2071,68 @@ Get blurred images from the given urls.
           "dst_hierarchy": "prefix"
         }
       ]
+    }
+  ]
+}
+```
+
+### `examples/workflows/cv/get_blur_images_simple.json`
+
+Get blurred image from the given url.
+- Adjust the `url` and `save_prefix` in the first `node` to process different image and save with different prefix.
+- Adjust the `blur_radius` in the first `node` to control the blur strength.
+
+```json
+{
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "url": "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+          "blur_radius": 3,
+          "save_prefix": "blur"
+        }
+      }
+    },
+    {
+      "key": "blur",
+      "type": "cv.blur",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.url",
+          "dst_hierarchy": "url"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.blur_radius",
+          "dst_hierarchy": "base_data.radius"
+        }
+      ]
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "blur",
+          "src_hierarchy": "image",
+          "dst_hierarchy": "urls.0"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ],
+      "data": {
+        "urls": []
+      }
     }
   ]
 }
@@ -1941,7 +2153,7 @@ Get resized images from the given urls.
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -1957,7 +2169,7 @@ Get resized images from the given urls.
     },
     {
       "key": "download",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "params",
@@ -1973,7 +2185,7 @@ Get resized images from the given urls.
     },
     {
       "key": "resize",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "download",
@@ -2004,7 +2216,7 @@ Get resized images from the given urls.
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "resize",
@@ -2036,7 +2248,7 @@ Get grayscale images from the given urls.
   "nodes": [
     {
       "key": "params",
-      "name": "common.parameters",
+      "type": "common.parameters",
       "data": {
         "params": {
           "urls": [
@@ -2049,7 +2261,7 @@ Get grayscale images from the given urls.
     },
     {
       "key": "download",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "params",
@@ -2065,7 +2277,7 @@ Get grayscale images from the given urls.
     },
     {
       "key": "grayscale",
-      "name": "common.loop",
+      "type": "common.loop",
       "injections": [
         {
           "src_key": "download",
@@ -2081,7 +2293,7 @@ Get grayscale images from the given urls.
     },
     {
       "key": "save",
-      "name": "debug.save_images",
+      "type": "debug.save_images",
       "injections": [
         {
           "src_key": "grayscale",
@@ -2094,6 +2306,299 @@ Get grayscale images from the given urls.
           "dst_hierarchy": "prefix"
         }
       ]
+    }
+  ]
+}
+```
+
+### `examples/workflows/openai/text2image2text.json`
+
+Perform text -> image -> text process from the given prompts.
+- Adjust the `prompts` in the first `node` for different processes.
+- The processes will be launched concurrently.
+
+```json
+{
+  "target": "img2txt",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "prompts": [
+            "A lovely little cat.",
+            "A lovely little dog."
+          ]
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.prompts",
+          "dst_hierarchy": "loop_values.text"
+        }
+      ],
+      "data": {
+        "base_node": "openai.txt2img",
+        "extract_hierarchy": "image_url",
+        "verbose": true
+      }
+    },
+    {
+      "key": "img2txt",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "loop_values.url"
+        }
+      ],
+      "data": {
+        "base_node": "openai.img2txt",
+        "extract_hierarchy": "text",
+        "verbose": true
+      }
+    }
+  ]
+}
+```
+
+### `examples/workflows/openai/get_image_generations.json`
+
+Get image generations from the given prompts.
+- Adjust the `prompts` and `save_prefix` in the first `node` to generate different images and save with different prefixes.
+- The images will be generated concurrently.
+
+```json
+{
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "prompts": [
+            "A lovely little cat.",
+            "A lovely little dog."
+          ],
+          "save_prefix": "openai_txt2img"
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.prompts",
+          "dst_hierarchy": "loop_values.text"
+        }
+      ],
+      "data": {
+        "base_node": "openai.txt2img",
+        "extract_hierarchy": "image_url",
+        "verbose": true
+      }
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "urls"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `examples/workflows/openai/image2text2image_simple.json`
+
+Perform image -> text -> image process from the given image.
+- Adjust the `url` and `save_prefix` in the first `node` for a different process and save with different prefixes.
+
+```json
+{
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "url": "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+          "save_prefix": "openai_img2txt2img"
+        }
+      }
+    },
+    {
+      "key": "img2txt",
+      "type": "openai.img2txt",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.url",
+          "dst_hierarchy": "url"
+        }
+      ]
+    },
+    {
+      "key": "txt2img",
+      "type": "openai.txt2img",
+      "injections": [
+        {
+          "src_key": "img2txt",
+          "src_hierarchy": "text",
+          "dst_hierarchy": "text"
+        }
+      ]
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "image_url",
+          "dst_hierarchy": "urls.0"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ],
+      "data": {
+        "urls": []
+      }
+    }
+  ]
+}
+```
+
+### `examples/workflows/openai/text2image2text_simple.json`
+
+Perform text -> image -> text process from the given prompt.
+- Adjust the `prompt` in the first `node` for a different process.
+
+```json
+{
+  "target": "img2txt",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "prompt": "A lovely little cat."
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "openai.txt2img",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.prompt",
+          "dst_hierarchy": "text"
+        }
+      ]
+    },
+    {
+      "key": "img2txt",
+      "type": "openai.img2txt",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "image_url",
+          "dst_hierarchy": "url"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `examples/workflows/openai/get_image_captionings.json`
+
+Get image captionings from the given urls.
+- Adjust the `urls` in the first `node` to process different images.
+- The images will be processed concurrently.
+
+```json
+{
+  "target": "img2txt",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "urls": [
+            "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/03/31/19/20/dog-4988985_1280.jpg"
+          ]
+        }
+      }
+    },
+    {
+      "key": "download",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.urls",
+          "dst_hierarchy": "loop_values.url"
+        }
+      ],
+      "data": {
+        "base_node": "common.download_image",
+        "extract_hierarchy": "image",
+        "verbose": true
+      }
+    },
+    {
+      "key": "img2txt",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "download",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "loop_values.url"
+        }
+      ],
+      "data": {
+        "base_node": "openai.img2txt",
+        "extract_hierarchy": "text",
+        "verbose": true
+      }
     }
   ]
 }
