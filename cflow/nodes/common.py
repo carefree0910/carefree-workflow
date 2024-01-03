@@ -3,7 +3,6 @@
 import asyncio
 
 from PIL import Image
-from enum import Enum
 from cftool import console
 from typing import Any
 from typing import Dict
@@ -13,11 +12,14 @@ from typing import Optional
 from pydantic import Field
 from pydantic import BaseModel
 from dataclasses import dataclass
-from pydantic_core import core_schema
 from cftool.cv import to_base64
 from cftool.misc import shallow_copy_dict
 from cftool.console import log
 
+from .schema import TImage
+from .schema import ImageModel
+from .schema import EmptyOutput
+from .schema import ImageAPIOuput
 from ..core import GATHER_NODE
 from ..core import extract_from
 from ..core import Node
@@ -188,44 +190,6 @@ class GatherNode(Node):
                     "`GatherNode` should always use `src_key=dst_hierarchy` "
                     f"for injections, but `{injection}` is found"
                 )
-
-
-# common fields / data models
-
-
-class DocEnum(Enum):
-    """A class that tells use to include it in the documentation"""
-
-
-class DocModel(BaseModel):
-    """A class that tells use to include it in the documentation"""
-
-
-class ImageField(Image.Image):
-    @classmethod
-    def __get_pydantic_core_schema__(cls, *args: Any) -> core_schema.CoreSchema:
-        return core_schema.with_info_plain_validator_function(cls.validate)
-
-    @classmethod
-    def validate(cls, v: Any, info: core_schema.ValidationInfo) -> Image.Image:
-        if isinstance(v, Image.Image):
-            return v
-        raise ValueError("Value must be a PIL Image")
-
-
-TImage = Union[str, ImageField]
-
-
-class ImageModel(DocModel):
-    url: TImage = Field(..., description="The url / PIL.Image instance of the image.")
-
-
-class ImageAPIOuput(DocModel):
-    image: str = Field(..., description="The base64 encoded image.")
-
-
-class EmptyOutput(BaseModel):
-    pass
 
 
 # common node interfaces
@@ -401,11 +365,6 @@ __all__ = [
     "LoopBackInjection",
     "LoopNode",
     "GatherNode",
-    "TImage",
-    "DocEnum",
-    "DocModel",
-    "ImageModel",
-    "ImageAPIOuput",
     "IImageNode",
     "ICUDANode",
     "EchoNode",

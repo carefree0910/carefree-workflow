@@ -23,10 +23,10 @@ from cftool.misc import safe_execute
 from cftool.misc import shallow_copy_dict
 from cftool.geometry import Matrix2D
 
-from .common import TImage
-from .common import DocEnum
-from .common import DocModel
-from .common import ImageModel
+from .schema import TImage
+from .schema import DocEnum
+from .schema import DocModel
+from .schema import ImageModel
 from .common import IImageNode
 from .common import IWithImageNode
 from ..core import Node
