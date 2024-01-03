@@ -1,9 +1,13 @@
+from io import BytesIO
 from PIL import Image
 from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Union
+from typing import Callable
+from typing import Optional
+from typing import Awaitable
 from aiohttp import ClientSession
 from pydantic import Field
 from pydantic import BaseModel
@@ -18,8 +22,14 @@ from ..core import Node
 from ..core import Flow
 from ..core import Schema
 
+try:
+    from openai import AsyncOpenAI
+except:
+    AsyncOpenAI = None
+
 
 HTTP_SESSION_KEY = "$http_session$"
+OPENAI_CLIENT_KEY = "$openai_client$"
 
 
 # enums / data models
@@ -179,6 +189,77 @@ class ICUDANode(Node):
     lock_key: str = "$cuda$"
 
 
+class OpenAIClient:
+    def __init__(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        upload_img_fn: Optional[Callable[[bytes], Awaitable[str]]] = None,
+    ):
+        if AsyncOpenAI is None:
+            raise ImportError("please install `openai` to use `OpenAIClient`")
+        self.client = AsyncOpenAI(api_key=api_key)
+        self.upload_img_fn = upload_img_fn
+
+    async def upload(self, image: Image.Image) -> str:
+        if self.upload_img_fn is None:
+            return to_base64(image)
+        bytes_io = BytesIO()
+        image.save(bytes_io, format=image.format)
+        bytes_io.seek(0)
+        return await self.upload_img_fn(bytes_io.getvalue())
+
+    async def close(self) -> None:
+        await self.client.close()
+
+
+class OpenAIClientHook(Hook):
+    @classmethod
+    async def initialize(cls, node: Node, flow: Flow) -> None:
+        if OPENAI_CLIENT_KEY not in node.shared_pool:
+            node.shared_pool[OPENAI_CLIENT_KEY] = OpenAIClient()
+
+    @classmethod
+    async def cleanup(cls, node: Node) -> None:
+        client = node.shared_pool.pop(OPENAI_CLIENT_KEY, None)
+        if client is not None:
+            if not isinstance(client, OpenAIClient):
+                raise TypeError(f"invalid openai client type: {type(client)}")
+            await client.close()
+
+
+class IWithOpenAINode(IWithImageNode):
+    """
+    node interface which
+    - requires `OpenAIClient` in the `shared_pool`
+    - (may) have image(s) as input.
+
+    This is helpful for crafting image processing nodes on top of OpenAI API.
+
+    Notes
+    -----
+    - This interface inherits `IWithImageNode`.
+    - This interface provides `openai_client` to get the `OpenAIClient` from the `shared_pool`.
+
+    """
+
+    @classmethod
+    def get_hooks(cls) -> List[type[Hook]]:
+        return [HttpSessionHook, OpenAIClientHook]
+
+    @property
+    def openai_client(self) -> OpenAIClient:
+        client = self.shared_pool.get(OPENAI_CLIENT_KEY)
+        if client is None:
+            raise ValueError(
+                f"`{OPENAI_CLIENT_KEY}` should be provided in the `shared_pool` "
+                f"for `{self.__class__.__name__}`"
+            )
+        if not isinstance(client, OpenAIClient):
+            raise TypeError(f"invalid openai client type: {type(client)}")
+        return client
+
+
 __all__ = [
     "DocEnum",
     "DocModel",
@@ -192,4 +273,7 @@ __all__ = [
     "IWithImageNode",
     "IImageNode",
     "ICUDANode",
+    "OpenAIClient",
+    "OpenAIClientHook",
+    "IWithOpenAINode",
 ]
