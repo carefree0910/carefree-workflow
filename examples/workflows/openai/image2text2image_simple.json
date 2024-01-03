@@ -1,0 +1,59 @@
+{
+  "$description": "Perform image -> text -> image process from the given image.\n- Adjust the `url` and `save_prefix` in the first `node` for a different process and save with different prefixes.",
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "url": "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+          "save_prefix": "openai_img2txt2img"
+        }
+      }
+    },
+    {
+      "key": "img2txt",
+      "type": "openai.img2txt",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.url",
+          "dst_hierarchy": "url"
+        }
+      ]
+    },
+    {
+      "key": "txt2img",
+      "type": "openai.txt2img",
+      "injections": [
+        {
+          "src_key": "img2txt",
+          "src_hierarchy": "text",
+          "dst_hierarchy": "text"
+        }
+      ]
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "image_url",
+          "dst_hierarchy": "urls.0"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ],
+      "data": {
+        "urls": []
+      }
+    }
+  ]
+}

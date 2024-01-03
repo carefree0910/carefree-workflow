@@ -1,0 +1,54 @@
+{
+  "$description": "Get blurred image from the given url.\n- Adjust the `url` and `save_prefix` in the first `node` to process different image and save with different prefix.\n- Adjust the `blur_radius` in the first `node` to control the blur strength.",
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "url": "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+          "blur_radius": 3,
+          "save_prefix": "blur"
+        }
+      }
+    },
+    {
+      "key": "blur",
+      "type": "cv.blur",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.url",
+          "dst_hierarchy": "url"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.blur_radius",
+          "dst_hierarchy": "base_data.radius"
+        }
+      ]
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "blur",
+          "src_hierarchy": "image",
+          "dst_hierarchy": "urls.0"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ],
+      "data": {
+        "urls": []
+      }
+    }
+  ]
+}

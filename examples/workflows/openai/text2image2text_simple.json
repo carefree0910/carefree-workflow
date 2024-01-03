@@ -1,0 +1,39 @@
+{
+  "$description": "Perform text -> image -> text process from the given prompt.\n- Adjust the `prompt` in the first `node` for a different process.",
+  "target": "img2txt",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "prompt": "A lovely little cat."
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "openai.txt2img",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.prompt",
+          "dst_hierarchy": "text"
+        }
+      ]
+    },
+    {
+      "key": "img2txt",
+      "type": "openai.img2txt",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "image_url",
+          "dst_hierarchy": "url"
+        }
+      ]
+    }
+  ]
+}

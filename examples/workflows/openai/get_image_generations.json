@@ -1,0 +1,53 @@
+{
+  "$description": "Get image generations from the given prompts.\n- Adjust the `prompts` and `save_prefix` in the first `node` to generate different images and save with different prefixes.\n- The images will be generated concurrently.",
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "prompts": [
+            "A lovely little cat.",
+            "A lovely little dog."
+          ],
+          "save_prefix": "openai_txt2img"
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.prompts",
+          "dst_hierarchy": "loop_values.text"
+        }
+      ],
+      "data": {
+        "base_node": "openai.txt2img",
+        "extract_hierarchy": "image_url",
+        "verbose": true
+      }
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "urls"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ]
+    }
+  ]
+}
