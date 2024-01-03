@@ -102,7 +102,7 @@ class IWithHttpSessionNode(Node):
         session = self.shared_pool.get(HTTP_SESSION_KEY)
         if session is None:
             raise ValueError(
-                "`http_session` should be provided in the `shared_pool` "
+                f"`{HTTP_SESSION_KEY}` should be provided in the `shared_pool` "
                 f"for `{self.__class__.__name__}`"
             )
         if not isinstance(session, ClientSession):
@@ -118,7 +118,7 @@ class IWithHttpSessionNode(Node):
 
 class IWithImageNode(IWithHttpSessionNode):
     """
-    node interface which has image(s) as input. This is helpful for crafting image processing nodes.
+    node interface which (may) have image(s) as input. This is helpful for crafting image processing nodes.
 
     Notes
     -----
