@@ -27,8 +27,8 @@ from .schema import TImage
 from .schema import DocEnum
 from .schema import DocModel
 from .schema import ImageModel
-from .common import IImageNode
-from .common import IWithImageNode
+from .schema import IImageNode
+from .schema import IWithImageNode
 from ..core import Node
 from ..core import Schema
 

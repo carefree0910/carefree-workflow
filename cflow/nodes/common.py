@@ -12,14 +12,14 @@ from typing import Optional
 from pydantic import Field
 from pydantic import BaseModel
 from dataclasses import dataclass
-from cftool.cv import to_base64
 from cftool.misc import shallow_copy_dict
 from cftool.console import log
 
 from .schema import TImage
 from .schema import ImageModel
+from .schema import IImageNode
 from .schema import EmptyOutput
-from .schema import ImageAPIOuput
+from .schema import IWithImageNode
 from ..core import GATHER_NODE
 from ..core import extract_from
 from ..core import Node
@@ -192,72 +192,6 @@ class GatherNode(Node):
                 )
 
 
-# common node interfaces
-
-
-class IWithImageNode(Node):
-    """
-    node interface which has image(s) as input. This is helpful for crafting image processing nodes.
-
-    Notes
-    -----
-    - This interface provides `get_image_from` to get the image from the given field.
-      - If the field is a url, it will be downloaded.
-      - The field can also be `PIL.Image` directly, since it might be injected by
-        other nodes.
-
-    """
-
-    async def fetch_image(self, tag: str, image: TImage) -> Image.Image:
-        if isinstance(image, str):
-            image = await self.download_image(image)
-        elif not isinstance(image, Image.Image):
-            raise ValueError(f"`{tag}` should be a `PIL.Image` or a url")
-        return image
-
-    async def get_image_from(self, field: str) -> Image.Image:
-        image = self.data[field]
-        return await self.fetch_image(field, image)
-
-
-class IImageNode(IWithImageNode):
-    """
-    Image node interface. This is helpful for crafting image processing nodes.
-
-    Notes
-    -----
-    - This interface assumes the output to be like `{"image": PIL.Image}`.
-
-    """
-
-    @classmethod
-    def get_schema(cls) -> Schema:
-        return Schema(
-            ImageModel,
-            api_output_model=ImageAPIOuput,
-            output_names=["image"],
-        )
-
-    @classmethod
-    async def get_api_response(cls, results: Dict[str, Image.Image]) -> Dict[str, str]:
-        return {"image": to_base64(results["image"])}
-
-
-@dataclass
-class ICUDANode(Node):
-    """
-    CUDA node interface. This is helpful when creating nodes for modern AI models.
-
-    Notes
-    -----
-    - CUDA executions should be 'offloaded' to avoid blocking other async executions.
-    - CUDA executions should be 'locked' to avoid CUDA issues.
-    """
-
-    offload: bool = True
-    lock_key: str = "$cuda$"
-
-
 # common nodes
 
 
@@ -365,8 +299,6 @@ __all__ = [
     "LoopBackInjection",
     "LoopNode",
     "GatherNode",
-    "IImageNode",
-    "ICUDANode",
     "EchoNode",
     "DownloadImageNode",
     "SaveImageNode",

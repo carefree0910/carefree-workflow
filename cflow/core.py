@@ -4,7 +4,6 @@ import asyncio
 
 from abc import abstractmethod
 from abc import ABCMeta
-from PIL import Image
 from cftool import console
 from typing import Any
 from typing import Set
@@ -15,14 +14,11 @@ from typing import Union
 from typing import TypeVar
 from typing import Callable
 from typing import Optional
-from aiohttp import ClientSession
 from pathlib import Path
 from pydantic import BaseModel
 from dataclasses import field
 from dataclasses import dataclass
 from cftool.web import get_err_msg
-from cftool.web import download_raw_with_retry
-from cftool.web import download_image_with_retry
 from cftool.misc import offload
 from cftool.misc import random_hash
 from cftool.misc import register_core
@@ -39,7 +35,6 @@ nodes: Dict[str, Type["Node"]] = {}
 UNDEFINED_PLACEHOLDER = "$undefined$"
 EXCEPTION_MESSAGE_KEY = "$exception$"
 ALL_LATENCIES_KEY = "$all_latencies$"
-HTTP_SESSION_KEY = "$http_session$"
 
 GATHER_NODE = "common.gather"
 
@@ -140,6 +135,16 @@ class Schema:
     description: Optional[str] = None
 
 
+class Hook:
+    @classmethod
+    async def initialize(cls, node: "Node", flow: "Flow") -> None:
+        pass
+
+    @classmethod
+    async def cleanup(cls, node: "Node") -> None:
+        pass
+
+
 @dataclass
 class Node(ISerializableDataClass, metaclass=ABCMeta):
     """
@@ -200,38 +205,23 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
     async def get_api_response(cls, results: Dict[str, Any]) -> Any:
         return results
 
+    @classmethod
+    def get_hooks(cls) -> List[Type[Hook]]:
+        return []
+
     async def initialize(self, flow: "Flow") -> None:
-        if HTTP_SESSION_KEY not in self.shared_pool:
-            self.shared_pool[HTTP_SESSION_KEY] = ClientSession()
+        for hook in self.get_hooks():
+            await hook.initialize(self, flow)
 
     async def cleanup(self) -> None:
-        http_session = self.shared_pool.pop(HTTP_SESSION_KEY, None)
-        if http_session is not None:
-            await http_session.close()
+        for hook in self.get_hooks():
+            await hook.cleanup(self)
 
     # abstract
 
     @abstractmethod
     async def execute(self) -> Any:
         pass
-
-    # shortcuts
-
-    @property
-    def http_session(self) -> ClientSession:
-        session = self.shared_pool.get(HTTP_SESSION_KEY)
-        if session is None:
-            raise ValueError(
-                "`http_session` should be provided in the `shared_pool` "
-                f"for `{self.__class__.__name__}`"
-            )
-        return session
-
-    async def download_raw(self, url: str) -> bytes:
-        return await download_raw_with_retry(self.http_session, url)
-
-    async def download_image(self, url: str) -> Image.Image:
-        return await download_image_with_retry(self.http_session, url)
 
     # internal
 
@@ -670,7 +660,6 @@ class Flow(Bundle[Node]):
 
 
 __all__ = [
-    "HTTP_SESSION_KEY",
     "Injection",
     "Schema",
     "Node",
