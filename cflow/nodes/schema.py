@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Type
 from typing import Union
 from typing import Callable
 from typing import Optional
@@ -104,7 +105,7 @@ class IWithHttpSessionNode(Node):
     """
 
     @classmethod
-    def get_hooks(cls) -> List[type[Hook]]:
+    def get_hooks(cls) -> List[Type[Hook]]:
         return [HttpSessionHook]
 
     @property
@@ -244,7 +245,7 @@ class IWithOpenAINode(IWithImageNode):
     """
 
     @classmethod
-    def get_hooks(cls) -> List[type[Hook]]:
+    def get_hooks(cls) -> List[Type[Hook]]:
         return [HttpSessionHook, OpenAIClientHook]
 
     @property
