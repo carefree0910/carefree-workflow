@@ -117,8 +117,16 @@ def render(*, file: str, output: str) -> None:
     type=str,
     help="The output markdown file path, should end with `.md`.",
 )
-def docs(*, output: str) -> None:
-    cflow.generate_documents(output)
+@click.option(
+    "--rag",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    type=bool,
+    help="Whether to make the generated document more 'RAG (Retrieval-Augmented Generation) friendly'.",
+)
+def docs(*, output: str, rag: bool) -> None:
+    cflow.generate_documents(output, rag)
 
 
 __all__ = [

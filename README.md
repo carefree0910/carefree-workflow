@@ -5,7 +5,7 @@
 
 ## Agent Friendly
 
-With the rapid development of AI (namely, the GPTs), I think modern libraries should be **agent-friendly**, which means developers should be able to build a GPT-agent on top of their libraries **automatically**, and after which users should be able to learn the library by interacting with this GPT-agent via natural language. With this in mind, `carefree-workflow` is designed to be modular, extensible, and automated. See [Highlights](#highlights) for more details.
+With the rapid development of AI (namely, the GPTs), I think modern libraries should be **agent-friendly**, which means developers should be able to build a GPT-agent on top of their libraries **automatically**, and after which users should be able to learn the library by interacting with this GPT-agent via natural language. With this in mind, `carefree-workflow` is designed to be modular, extensible, automated and 'RAG friendly'. See [Highlights](#highlights) for more details.
 
 
 ## Highlights
@@ -18,6 +18,7 @@ With the rapid development of AI (namely, the GPTs), I think modern libraries sh
   - All nodes, as well as the workflow itself, can be **automatically** turned into RESTful APIs.
   - Detailed [documentation](https://github.com/carefree0910/carefree-workflow/tree/main/docs.md) of the design / nodes / workflow / ... can be **automatically** generated, which makes this library and its extended versions agent-friendly.
     - That is to say, you can build a GPT-agent on top of this library by simply feed the auto-generated documentation ([this](https://github.com/carefree0910/carefree-workflow/tree/main/docs.md)) to it. After which, you can interact with the agent via natural language and it will tell you how to build the workflow you want (it may even be able to give you the final workflow JSON directly)!
+    - We even provide a 'RAG friendly' version of the documentation ([this](https://github.com/carefree0910/carefree-workflow/tree/main/docs_rag.md)), which makes **R**etrieval-**A**ugmented **G**eneration easier. This version uses `__RAG__` as the special separator, so you can chunk the documentation into suitable parts for RAG.
 - **Extensible**: you can easily extend the library with your own nodes.
 - **Serializable**: the workflow can be serialized into / deserialized from a single JSON file.
 - **Human Readable**: the workflow JSON file is human readable and easy to understand.

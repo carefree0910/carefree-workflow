@@ -5,11 +5,13 @@ import inspect
 from cftool import console
 from typing import List
 from typing import Type
+from typing import Tuple
 from typing import Optional
 from pathlib import Path
 from dataclasses import dataclass
 
 
+RAG_SEPARATOR = "__RAG__"
 UNDEFINED_PLACEHOLDER = "*Undefined*"
 
 
@@ -21,10 +23,17 @@ class Document:
     input_docs: str = UNDEFINED_PLACEHOLDER
     output_docs: str = UNDEFINED_PLACEHOLDER
     api_ouput_docs: Optional[str] = None
+    rag: bool = False
 
     @property
     def markdown(self) -> str:
-        return f"""## {self.name}
+        if not self.rag:
+            eof = ""
+            title = f"## {self.name}"
+        else:
+            eof = f"\n{RAG_SEPARATOR}\n"
+            title = f"## Supported Node - {self.name}"
+        return f"""{title}
 
 ### Description
 
@@ -46,7 +55,7 @@ class Document:
 
 ```python
 {self.source_codes}```
-
+{eof}
 """
 
 
@@ -73,9 +82,10 @@ def fetch_doc_sources(t_base: type) -> List[str]:
     return sources
 
 
-def genearte_document(t_node: Type[cflow.Node]) -> Optional[Document]:
+def genearte_document(t_node: Type[cflow.Node], rag: bool) -> Optional[Document]:
     schema = t_node.get_schema()
-    document = Document(name=t_node.__name__, source_codes=inspect.getsource(t_node))
+    source = inspect.getsource(t_node)
+    document = Document(name=t_node.__name__, source_codes=source, rag=rag)
     if schema is None:
         return document
     if schema.input_model is not None:
@@ -100,38 +110,47 @@ def genearte_document(t_node: Type[cflow.Node]) -> Optional[Document]:
     return document
 
 
-def generate_documents(output: str) -> None:
-    if not output.endswith(".md"):
-        raise ValueError(f"`dst` should be a markdown file, '{output}' found")
-    console.rule("Generating Documents")
-    t_nodes = cflow.use_all_t_nodes()
-    documents: List[Document] = list(filter(bool, map(genearte_document, t_nodes)))  # type: ignore
-    root = Path(__file__).parent.parent
-    examples_dir = root / "examples"
-    workflows_dir = examples_dir / "workflows"
-    code_snippets = examples_dir.glob("*.py")
-    workflow_jsons = workflows_dir.rglob("*.json")
-    code_example_docs = "\n".join(
-        [
-            f"### `{code.relative_to(root)}`\n\n```python\n{code.read_text()}```\n"
-            for code in code_snippets
-        ]
-    )[:-1]
-    workflow_example_docs_list = []
-    for workflow in workflow_jsons:
+def generate_documents(output: str, rag: bool = False) -> None:
+    def get_example_title_and_eof(path: Path, title_prefix: str) -> Tuple[str, str]:
+        relative = str(path.relative_to(root))
+        if not rag:
+            eof = "\n"
+            title = f"### `{relative}`"
+        else:
+            eof = f"\n{RAG_SEPARATOR}\n"
+            title = f"### {title_prefix}`{relative}`"
+        return title, eof
+
+    def get_code_example(code: Path) -> str:
+        title, eof = get_example_title_and_eof(code, "Coding Example - ")
+        return f"{title}\n\n```python\n{code.read_text()}```{eof}"
+
+    def get_json_example(workflow: Path) -> str:
+        title, eof = get_example_title_and_eof(workflow, "Workflow JSON Example - ")
         with open(workflow, "r") as f:
             w_json = json.load(f)
             w_description = w_json.pop("$description", "*Description is not provided.*")
-        w_doc = f"""### `{workflow.relative_to(root)}`
+        return f"""{title}
 
 {w_description}
 
 ```json
 {json.dumps(w_json, indent=2, ensure_ascii=False)}
-```
-"""
-        workflow_example_docs_list.append(w_doc)
-    workflow_example_docs = "\n".join(workflow_example_docs_list)[:-1]
+```{eof}"""
+
+    if not output.endswith(".md"):
+        raise ValueError(f"`dst` should be a markdown file, '{output}' found")
+    console.rule("Generating Documents")
+    t_nodes = cflow.use_all_t_nodes()
+    gen_doc = lambda t_node: genearte_document(t_node, rag)
+    documents: List[Document] = list(filter(bool, map(gen_doc, t_nodes)))  # type: ignore
+    root = Path(__file__).parent.parent
+    examples_dir = root / "examples"
+    workflows_dir = examples_dir / "workflows"
+    code_snippets = examples_dir.glob("*.py")
+    workflow_jsons = workflows_dir.rglob("*.json")
+    code_example_docs = "\n".join(map(get_code_example, code_snippets))[:-1]
+    workflow_example_docs = "\n".join(map(get_json_example, workflow_jsons))[:-1]
     workflow_model_source = inspect.getsource(cflow.WorkflowModel).replace("`", "'")
     workflow_model_source = strip_source(workflow_model_source, "def")
     workflow_execute_source = inspect.getsource(cflow.Flow.execute).replace("`", "'")
@@ -141,6 +160,7 @@ def generate_documents(output: str) -> None:
     workflow_execute_source = "\n".join(workflow_execute_split)
     enum_docs = "\n".join(fetch_doc_sources(cflow.DocEnum))[:-1]
     data_model_docs = "\n".join(fetch_doc_sources(cflow.DocModel))[:-1]
+    sep = f"\n{RAG_SEPARATOR}\n" if rag else ""
     generated = f"""# `carefree-workflow` Documentation
 
 Here are some design principles of `carefree-workflow`:
@@ -172,7 +192,7 @@ git clone https://github.com/carefree0910/carefree-workflow.git
 cd carefree-workflow
 pip install -e .
 ```
-
+{sep}
 # Node
 
 Every `node` in `carefree-workflow` should inherit from `cflow.Node`:
@@ -236,7 +256,7 @@ class HelloNode(Node):
 ```
 
 This will help us automatically generate the API endpoint as well as the documentation.
-
+{sep}
 # Workflow
 
 ```python
@@ -329,7 +349,7 @@ Here are some important input data models when you want to use `workflow` in an 
 ```python
 {workflow_model_source}
 ```
-
+{sep}
 # Schema
 
 ## Common Enums
@@ -339,7 +359,7 @@ Here are some important input data models when you want to use `workflow` in an 
 ## Common Data Models
 
 {data_model_docs}
-
+{sep}
 # Supported Nodes
 
 {''.join([document.markdown for document in documents])[:-1]}
