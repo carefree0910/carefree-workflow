@@ -1,3 +1,6 @@
+import json
+import websockets
+
 from io import BytesIO
 from PIL import Image
 from enum import Enum
@@ -8,6 +11,7 @@ from typing import Type
 from typing import Union
 from typing import Callable
 from typing import Optional
+from typing import Protocol
 from typing import Awaitable
 from aiohttp import ClientSession
 from pydantic import Field
@@ -125,6 +129,42 @@ class IWithHttpSessionNode(Node):
 
     async def download_image(self, url: str) -> Image.Image:
         return await download_image_with_retry(self.http_session, url)
+
+
+class IHandleMessage(Protocol):
+    async def __call__(self, raw_message: websockets.Data) -> bool:
+        """
+        Handle the message and return whether to terminate the websocket.
+
+        Parameters
+        ----------
+        raw_message: websockets.Data
+            The raw message.
+
+        Returns
+        -------
+        bool
+            Whether to terminate the websocket (return `True` to terminate).
+        """
+
+
+class IWithWebsocketNode(Node):
+    async def connect(
+        self,
+        url: str,
+        *,
+        handler: IHandleMessage,
+        send_data: Optional[Dict[str, Any]] = None,
+        headers: Optional[websockets.HeadersLike] = None,
+        **kwargs: Any,
+    ) -> None:
+        kwargs["extra_headers"] = headers
+        async with websockets.connect(url, **kwargs) as websocket:
+            if send_data is not None:
+                await websocket.send(json.dumps(send_data))
+            async for raw_message in websocket:
+                if await handler(raw_message):
+                    break
 
 
 class IWithImageNode(IWithHttpSessionNode):
@@ -271,6 +311,7 @@ __all__ = [
     "EmptyOutput",
     "HttpSessionHook",
     "IWithHttpSessionNode",
+    "IWithWebsocketNode",
     "IWithImageNode",
     "IImageNode",
     "ICUDANode",

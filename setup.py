@@ -28,6 +28,7 @@ setup(
         "networkx",
         "requests",
         "matplotlib",
+        "websockets",
         "opencv-python-headless",
         "click>=8.1.3",
         "carefree-toolkit>=0.3.11",
