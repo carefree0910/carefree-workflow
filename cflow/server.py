@@ -1,3 +1,5 @@
+import re
+
 from typing import Any
 from typing import Dict
 from typing import List
@@ -13,6 +15,7 @@ from cftool.misc import random_hash
 
 from .core import Node
 from .core import Flow
+from .parameters import OPT
 from .nodes.common import LoopBackInjection
 
 
@@ -62,8 +65,10 @@ def use_all_t_nodes() -> List[Type[Node]]:
     return list(t_node for t_node in Node.d().values() if issubclass(t_node, Node))
 
 
-def register_api(app: FastAPI, t_node: Type[Node]) -> None:
+def register_api(app: FastAPI, t_node: Type[Node], focus: str) -> None:
     endpoint = parse_endpoint(t_node)
+    if not re.search(focus, endpoint):
+        return
     input_model = parse_input_model(t_node)
     output_model = parse_output_model(t_node)
     description = parse_description(t_node)
@@ -90,8 +95,9 @@ def register_api(app: FastAPI, t_node: Type[Node]) -> None:
 
 
 def register_nodes_api(app: FastAPI) -> None:
+    focus = OPT.focus
     for t_node in use_all_t_nodes():
-        register_api(app, t_node)
+        register_api(app, t_node, focus)
 
 
 class SrcKey(BaseModel):
@@ -193,6 +199,8 @@ def register_server_api(app: FastAPI) -> None:
 class API:
     def __init__(self) -> None:
         self.app = FastAPI()
+
+    def initialize(self) -> None:
         register_server_api(self.app)
         register_nodes_api(self.app)
         register_workflow_api(self.app)

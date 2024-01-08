@@ -56,8 +56,17 @@ def main() -> None:
     type=bool,
     help="Whether to reload the server when the code changes.",
 )
-def serve(*, app: str, host: str, port: int, reload: bool) -> None:
-    uvicorn.run(app, host=host, port=port, reload=reload)
+@click.option(
+    "--focus",
+    default="",
+    show_default=True,
+    type=str,
+    help="The regex pattern to filter the endpoints.",
+)
+def serve(*, app: str, host: str, port: int, reload: bool, focus: str) -> None:
+    with cflow.OPT.opt_context({"focus": focus}):
+        api.initialize()
+        uvicorn.run(app, host=host, port=port, reload=reload)
 
 
 @main.command()
