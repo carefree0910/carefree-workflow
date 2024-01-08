@@ -16,12 +16,12 @@ from cftool.misc import random_hash
 from .core import Node
 from .core import Flow
 from .parameters import OPT
+from .nodes.common import to_endpoint
 from .nodes.common import LoopBackInjection
 
 
 def parse_endpoint(t_node: Type[Node]) -> str:
-    split = t_node.__identifier__.split(".")
-    return f"/{'/'.join(split)}"
+    return to_endpoint(t_node.__identifier__)
 
 
 def parse_input_model(t_node: Type[Node]) -> Optional[Type[BaseModel]]:

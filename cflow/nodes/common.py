@@ -295,6 +295,14 @@ class SaveImagesNode(IWithImageNode):
         return {}
 
 
+# common node utils
+
+
+def to_endpoint(name: str) -> str:
+    split = name.split(".")
+    return f"/{'/'.join(split)}"
+
+
 __all__ = [
     "LoopBackInjection",
     "LoopNode",
@@ -303,4 +311,5 @@ __all__ = [
     "DownloadImageNode",
     "SaveImageNode",
     "SaveImagesNode",
+    "to_endpoint",
 ]
