@@ -31,6 +31,7 @@ from cftool.data_structures import Bundle
 TPath = Union[str, Path]
 TTNode = TypeVar("TTNode", bound=Type["Node"])
 nodes: Dict[str, Type["Node"]] = {}
+_shared_pool: Dict[str, Any] = {}
 
 UNDEFINED_PLACEHOLDER = "$undefined$"
 EXCEPTION_MESSAGE_KEY = "$exception$"
@@ -137,11 +138,11 @@ class Schema:
 
 class Hook:
     @classmethod
-    async def initialize(cls, node: "Node", flow: "Flow") -> None:
+    async def initialize(cls, shared_pool: Dict[str, Any]) -> None:
         pass
 
     @classmethod
-    async def cleanup(cls, node: "Node") -> None:
+    async def cleanup(cls, shared_pool: Dict[str, Any]) -> None:
         pass
 
 
@@ -193,7 +194,6 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
     lock_key: Optional[str] = None
     # runtime attribute, should not be touched and will not be serialized
     executing: bool = False
-    shared_pool: Dict[str, Any] = field(default_factory=dict)
 
     # optional
 
@@ -211,11 +211,11 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
 
     async def initialize(self, flow: "Flow") -> None:
         for hook in self.get_hooks():
-            await hook.initialize(self, flow)
+            await hook.initialize(_shared_pool)
 
     async def cleanup(self) -> None:
         for hook in self.get_hooks():
-            await hook.cleanup(self)
+            await hook.cleanup(_shared_pool)
 
     # abstract
 
@@ -246,10 +246,13 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
             before_register=before,
         )
 
+    @property
+    def shared_pool(self) -> Dict[str, Any]:
+        return _shared_pool
+
     def copy(self) -> "Node":
         copied = self.__class__()
         copied.from_info(shallow_copy_dict(self.to_info()))
-        copied.shared_pool = self.shared_pool
         return copied
 
     def to_item(self) -> Item["Node"]:
@@ -258,11 +261,8 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
         return Item(self.key, self)
 
     def to_info(self) -> Dict[str, Any]:
-        pool, self.shared_pool = self.shared_pool, {}
         info = super().to_info()
         info.pop("executing")
-        info.pop("shared_pool")
-        self.shared_pool = pool
         return info
 
     def from_info(self, info: Dict[str, Any]) -> None:
@@ -615,13 +615,11 @@ class Flow(Bundle[Node]):
         try:
             workflow = self.copy()
             reachable = workflow.get_reachable(target)
-            shared_pool: Dict[str, Any] = {}
             if target not in workflow:
                 raise ValueError(f"cannot find target '{target}' in the workflow")
             reachable_nodes = [item.data for item in workflow if item.key in reachable]
             for node in reachable_nodes:
                 node.check_injections()
-                node.shared_pool = shared_pool
                 if verbose:
                     console.debug(f"initializing node '{node.key}'")
                 await node.initialize(workflow)

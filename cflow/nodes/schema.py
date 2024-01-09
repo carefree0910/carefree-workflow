@@ -84,13 +84,13 @@ class EmptyOutput(BaseModel):
 
 class HttpSessionHook(Hook):
     @classmethod
-    async def initialize(cls, node: Node, flow: Flow) -> None:
-        if HTTP_SESSION_KEY not in node.shared_pool:
-            node.shared_pool[HTTP_SESSION_KEY] = ClientSession()
+    async def initialize(cls, shared_pool: Dict[str, Any]) -> None:
+        if HTTP_SESSION_KEY not in shared_pool:
+            shared_pool[HTTP_SESSION_KEY] = ClientSession()
 
     @classmethod
-    async def cleanup(cls, node: Node) -> None:
-        http_session = node.shared_pool.pop(HTTP_SESSION_KEY, None)
+    async def cleanup(cls, shared_pool: Dict[str, Any]) -> None:
+        http_session = shared_pool.pop(HTTP_SESSION_KEY, None)
         if http_session is not None:
             if not isinstance(http_session, ClientSession):
                 raise TypeError(f"invalid http session type: {type(http_session)}")
@@ -256,13 +256,13 @@ class OpenAIClient:
 
 class OpenAIClientHook(Hook):
     @classmethod
-    async def initialize(cls, node: Node, flow: Flow) -> None:
-        if OPENAI_CLIENT_KEY not in node.shared_pool:
-            node.shared_pool[OPENAI_CLIENT_KEY] = OpenAIClient()
+    async def initialize(cls, shared_pool: Dict[str, Any]) -> None:
+        if OPENAI_CLIENT_KEY not in shared_pool:
+            shared_pool[OPENAI_CLIENT_KEY] = OpenAIClient()
 
     @classmethod
-    async def cleanup(cls, node: Node) -> None:
-        client = node.shared_pool.pop(OPENAI_CLIENT_KEY, None)
+    async def cleanup(cls, shared_pool: Dict[str, Any]) -> None:
+        client = shared_pool.pop(OPENAI_CLIENT_KEY, None)
         if client is not None:
             if not isinstance(client, OpenAIClient):
                 raise TypeError(f"invalid openai client type: {type(client)}")
