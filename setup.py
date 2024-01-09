@@ -34,6 +34,7 @@ setup(
         "carefree-toolkit>=0.3.11",
     ],
     extras_require={
+        "ai": ai_requires,
         "openai": openai_requires,
         "full": openai_requires + ai_requires,
     },
