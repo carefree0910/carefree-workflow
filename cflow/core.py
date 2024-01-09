@@ -210,10 +210,14 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
         return []
 
     async def initialize(self, flow: "Flow") -> None:
+        """Will be called everytime before the execution."""
+
         for hook in self.get_hooks():
             await hook.initialize(_shared_pool)
 
     async def cleanup(self) -> None:
+        """Will be called everytime after the execution."""
+
         for hook in self.get_hooks():
             await hook.cleanup(_shared_pool)
 

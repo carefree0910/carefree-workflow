@@ -87,8 +87,10 @@ def register_api(app: FastAPI, t_node: Type[Node], focus: str) -> None:
     async def _(data: input_model) -> output_model:  # type: ignore
         try:
             node = t_node(random_hash(), data.model_dump())  # type: ignore
+            await node.initialize(Flow())
             results = await node.execute()
             results = await t_node.get_api_response(results)
+            await node.cleanup()
             return output_model(**results)
         except Exception as err:
             raise_err(err)
