@@ -1,4 +1,5 @@
 import re
+import asyncio
 
 from typing import Any
 from typing import Dict
@@ -13,6 +14,7 @@ from cftool.web import raise_err
 from cftool.web import get_responses
 from cftool.misc import random_hash
 
+from .core import warmup
 from .core import Node
 from .core import Flow
 from .parameters import OPT
@@ -77,6 +79,7 @@ def register_api(app: FastAPI, t_node: Type[Node], focus: str) -> None:
     names = t_node.__identifier__.split(".")
     names[0] = f"[{names[0]}]"
     name = "_".join(names)
+    asyncio.run(warmup(t_node, True))
 
     @app.post(
         endpoint,

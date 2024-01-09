@@ -32,6 +32,7 @@ TPath = Union[str, Path]
 TTNode = TypeVar("TTNode", bound=Type["Node"])
 nodes: Dict[str, Type["Node"]] = {}
 _shared_pool: Dict[str, Any] = {}
+warmed_up_records: Dict[str, bool] = {}
 
 UNDEFINED_PLACEHOLDER = "$undefined$"
 EXCEPTION_MESSAGE_KEY = "$exception$"
@@ -58,6 +59,15 @@ def extract_from(data: Any, hierarchy: str) -> Any:
                 f"is '{type(data)}' ({data})"
             )
     return data
+
+
+async def warmup(t_node: Type["Node"], verbose: bool) -> None:
+    warmed_up_key = t_node.__identifier__
+    if not warmed_up_records.get(warmed_up_key, False):
+        if verbose:
+            console.debug(f"warming up node '{warmed_up_key}'")
+        await t_node.warmup()
+        warmed_up_records[warmed_up_key] = True
 
 
 @dataclass
@@ -181,9 +191,16 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
     async get_api_response(results: Dict[str, Any]) -> Any
         Optional method that returns the API response of the node from its 'raw' results.
         Implement this method to handle complex API responses (e.g. `PIL.Image`).
-    async initialize(flow: Flow) -> None
-        Optional method that will be called before the execution of the workflow.
+    @classmethod
+    async warmup() -> None
+        Optional method that will be called:
+        - only once.
+        - before the server starts, if under API mode.
         Implement this method to do heavy initializations (e.g. loading AI models).
+    async initialize(flow: Flow) -> None
+        Optional method that will be called everytime before the execution.
+    async cleanup() -> None
+        Optional method that will be called everytime after the execution.
 
     """
 
@@ -208,6 +225,18 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
     @classmethod
     def get_hooks(cls) -> List[Type[Hook]]:
         return []
+
+    @classmethod
+    async def warmup(cls) -> None:
+        """
+        This is used to warmup the node, and will be called:
+        - only once.
+        - before the server starts, if under API mode.
+
+        > The main difference between `warmup` and `initialize` is that `warmup` will be
+        called only once, while `initialize` will be called everytime the node is executed.
+        > So you can do some heavy initializations here (e.g. loading AI models).
+        """
 
     async def initialize(self, flow: "Flow") -> None:
         """Will be called everytime before the execution."""
@@ -624,6 +653,7 @@ class Flow(Bundle[Node]):
             reachable_nodes = [item.data for item in workflow if item.key in reachable]
             for node in reachable_nodes:
                 node.check_injections()
+                await warmup(node.__class__, verbose)
                 if verbose:
                     console.debug(f"initializing node '{node.key}'")
                 await node.initialize(workflow)
