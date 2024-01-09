@@ -13,25 +13,10 @@ from typing import Dict
 from typing import List
 from typing import Union
 from typing import Optional
-from pathlib import Path
 from pydantic import Field
 from pydantic import BaseModel
 from cftool.misc import shallow_copy_dict
 from cftool.types import TNumberPair
-from cflearn.api import APIPool
-from cflearn.zoo import SDVersions
-from cflearn.toolkit import download_checkpoint
-from cflearn.api.multimodal import DiffusionAPI
-from cflearn.api.cv import TranslatorAPI
-from cflearn.api.cv import ImageHarmonizationAPI
-from cflearn.api.multimodal import InpaintingMode
-from cflearn.api.multimodal import InpaintingSettings
-from cflearn.api.multimodal import ControlledDiffusionAPI
-from cflearn.modules.multimodal.diffusion import StableDiffusion
-from cflearn.api.cv.third_party.lama import LaMaAPI
-from cflearn.api.cv.third_party.isnet import ISNetAPI
-from cflearn.api.nlp.third_party.prompt import PromptEnhanceAPI
-from cflearn.api.multimodal.third_party.blip import BLIPAPI
 
 from ..common import to_endpoint
 from ..schema import TImage
@@ -39,6 +24,39 @@ from ..schema import TextModel
 from ..schema import ImageModel
 from ..schema import IWithHttpSessionNode
 from ...parameters import OPT
+
+try:
+    from cflearn.api import APIPool
+    from cflearn.zoo import SDVersions
+    from cflearn.toolkit import download_checkpoint
+    from cflearn.api.cv import TranslatorAPI
+    from cflearn.api.cv import ImageHarmonizationAPI
+    from cflearn.api.multimodal import DiffusionAPI
+    from cflearn.api.multimodal import InpaintingMode
+    from cflearn.api.multimodal import InpaintingSettings
+    from cflearn.api.multimodal import ControlledDiffusionAPI
+    from cflearn.modules.multimodal.diffusion import StableDiffusion
+    from cflearn.api.cv.third_party.lama import LaMaAPI
+    from cflearn.api.cv.third_party.isnet import ISNetAPI
+    from cflearn.api.nlp.third_party.prompt import PromptEnhanceAPI
+    from cflearn.api.multimodal.third_party.blip import BLIPAPI
+except:
+
+    class SDVersions(str, Enum):  # type: ignore
+        v1_5 = "v1.5"
+
+    class InpaintingMode(str, Enum):  # type: ignore
+        NORMAL = "normal"
+
+    APIPool = None
+    TranslatorAPI = None
+    ImageHarmonizationAPI = None
+    DiffusionAPI = None
+    ControlledDiffusionAPI = None
+    LaMaAPI = None
+    ISNetAPI = None
+    PromptEnhanceAPI = None
+    BLIPAPI = None
 
 
 BaseSDTag = "_base_sd"
@@ -96,6 +114,8 @@ def init_sd(**kwargs: Any) -> ControlledDiffusionAPI:
 
 
 def register_sd() -> None:
+    if APIPool is None:
+        return
     get_api_pool().register(APIs.SD, init_sd)
 
 

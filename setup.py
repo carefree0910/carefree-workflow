@@ -32,6 +32,7 @@ setup(
         "opencv-python-headless",
         "click>=8.1.3",
         "carefree-toolkit>=0.3.11",
+        "carefree-learn>=0.5.0",
     ],
     extras_require={
         "ai": ai_requires,
