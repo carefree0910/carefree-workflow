@@ -12,6 +12,7 @@ workflows_folder = file_folder.parent / "examples" / "workflows"
 
 class TestServer(unittest.TestCase):
     def setUp(self):
+        cflow.cli.api.initialize()
         self.client = TestClient(cflow.cli.api.app)
 
     def test_server_status(self):
