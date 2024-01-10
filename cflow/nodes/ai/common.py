@@ -31,15 +31,12 @@ try:
     from cflearn.zoo import SDVersions
     from cflearn.toolkit import download_checkpoint
     from cflearn.api.cv import TranslatorAPI
-    from cflearn.api.cv import ImageHarmonizationAPI
     from cflearn.api.multimodal import DiffusionAPI
     from cflearn.api.multimodal import InpaintingMode
     from cflearn.api.multimodal import InpaintingSettings
     from cflearn.api.multimodal import ControlledDiffusionAPI
     from cflearn.modules.multimodal.diffusion import StableDiffusion
-    from cflearn.api.cv.third_party.lama import LaMaAPI
     from cflearn.api.cv.third_party.isnet import ISNetAPI
-    from cflearn.api.nlp.third_party.prompt import PromptEnhanceAPI
     from cflearn.api.multimodal.third_party.blip import BLIPAPI
 except:
 
@@ -77,6 +74,7 @@ class APIs(str, Enum):
     ESR = "esr"
     ESR_ANIME = "esr_anime"
     ISNET = "isnet"
+    BLIP = "blip"
 
 
 def _base_sd_path() -> str:
@@ -132,6 +130,10 @@ def register_esr_anime() -> None:
 
 def register_isnet() -> None:
     get_api_pool().register(APIs.ISNET, ISNetAPI)
+
+
+def register_blip() -> None:
+    get_api_pool().register(APIs.BLIP, BLIPAPI)
 
 
 # enums
