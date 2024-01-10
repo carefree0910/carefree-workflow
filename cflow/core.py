@@ -654,6 +654,7 @@ class Flow(Bundle[Node]):
             for node in reachable_nodes:
                 node.check_injections()
                 await warmup(node.__class__, verbose)
+            for node in reachable_nodes:
                 if verbose:
                     console.debug(f"initializing node '{node.key}'")
                 await node.initialize(workflow)
