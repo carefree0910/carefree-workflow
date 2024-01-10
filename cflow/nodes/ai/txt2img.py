@@ -1,6 +1,5 @@
 from PIL import Image
 from typing import Dict
-from cftool.cv import to_uint8
 
 from .common import APIs
 from .common import sd_txt2img_name
@@ -8,7 +7,7 @@ from .common import register_sd
 from .common import get_sd_from
 from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
-from .common import get_normalized_arr_from_diffusion
+from .common import get_image_from_diffusion_output
 from .common import Txt2ImgDiffusionModel
 from ..cv import WHModel
 from ..schema import IImageNode
@@ -40,8 +39,7 @@ class SDTxt2ImgNode(IImageNode):
         kwargs = handle_diffusion_model(m, data)
         await handle_diffusion_hooks(m, data, self, kwargs)
         res = m.txt2img(data.text, size=size, max_wh=data.max_wh, **kwargs)
-        img_arr = res.numpy()[0]
-        image = Image.fromarray(to_uint8(get_normalized_arr_from_diffusion(img_arr)))
+        image = get_image_from_diffusion_output(res.numpy()[0])
         return {"image": image}
 
 

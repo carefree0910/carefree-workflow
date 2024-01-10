@@ -15,6 +15,7 @@ from typing import Union
 from typing import Optional
 from pydantic import Field
 from pydantic import BaseModel
+from cftool.cv import to_uint8
 from cftool.misc import shallow_copy_dict
 from cftool.types import TNumberPair
 
@@ -546,7 +547,8 @@ def get_sd_from(api_key: APIs, data: SDParameters, **kw: Any) -> ControlledDiffu
     return sd
 
 
-def get_normalized_arr_from_diffusion(img_arr: np.ndarray) -> np.ndarray:
-    img_arr = 0.5 * (img_arr + 1.0)
+def get_image_from_diffusion_output(diffusion_output: np.ndarray) -> Image.Image:
+    img_arr = 0.5 * (diffusion_output + 1.0)
     img_arr = img_arr.transpose([1, 2, 0])
-    return img_arr
+    img_arr = to_uint8(img_arr)
+    return Image.fromarray(img_arr)

@@ -4,7 +4,6 @@ from typing import Tuple
 from pydantic import Field
 from pydantic import BaseModel
 from cftool.cv import to_rgb
-from cftool.cv import to_uint8
 
 from .common import APIs
 from .common import sd_img2img_name
@@ -12,7 +11,7 @@ from .common import register_sd
 from .common import get_sd_from
 from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
-from .common import get_normalized_arr_from_diffusion
+from .common import get_image_from_diffusion_output
 from .common import Img2ImgDiffusionModel
 from ..schema import IImageNode
 from ...core import Node
@@ -68,7 +67,7 @@ class SDImg2ImgNode(IImageNode):
         m = get_sd_from(APIs.SD, data)  # type: ignore
         kwargs = handle_diffusion_model(m, data)
         await handle_diffusion_hooks(m, data, self, kwargs)
-        img_arr = m.img2img(
+        diffusion_output = m.img2img(
             image,
             cond=[data.text],
             max_wh=data.max_wh,
@@ -76,7 +75,7 @@ class SDImg2ImgNode(IImageNode):
             anchor=64,
             **kwargs,
         ).numpy()[0]
-        image = Image.fromarray(to_uint8(get_normalized_arr_from_diffusion(img_arr)))
+        image = get_image_from_diffusion_output(diffusion_output)
         return {"image": image}
 
 
