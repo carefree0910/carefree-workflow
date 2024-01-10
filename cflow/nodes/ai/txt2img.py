@@ -13,7 +13,6 @@ from .common import Txt2ImgDiffusionModel
 from ..cv import WHModel
 from ..schema import IImageNode
 from ...core import Node
-from ...core import Flow
 from ...core import Schema
 
 
