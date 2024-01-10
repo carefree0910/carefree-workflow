@@ -20,6 +20,7 @@ from .schema import ImageModel
 from .schema import IImageNode
 from .schema import EmptyOutput
 from .schema import IWithImageNode
+from ..core import LOOP_NODE
 from ..core import GATHER_NODE
 from ..core import extract_from
 from ..core import Node
@@ -93,7 +94,7 @@ class LoopOutput(BaseModel):
     results: List[Any] = Field(..., description="The results of the loop.")
 
 
-@Node.register("common.loop")
+@Node.register(LOOP_NODE)
 class LoopNode(Node):
     @classmethod
     def get_schema(cls) -> Schema:

@@ -38,6 +38,7 @@ UNDEFINED_PLACEHOLDER = "$undefined$"
 EXCEPTION_MESSAGE_KEY = "$exception$"
 ALL_LATENCIES_KEY = "$all_latencies$"
 
+LOOP_NODE = "common.loop"
 GATHER_NODE = "common.gather"
 
 
