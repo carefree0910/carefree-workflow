@@ -29,15 +29,15 @@ from ...core import Node
 from ...core import Schema
 
 
-class WHSettings(BaseModel):
+# img2img (stable diffusion)
+
+
+class Img2ImgSDSettings(BaseModel):
+    text: str = Field(..., description="The text that we want to handle.")
     wh: Tuple[int, int] = Field(
         (0, 0),
         description="The target output size, `0` means as-is",
     )
-
-
-class Img2ImgSDSettings(WHSettings):
-    text: str = Field(..., description="The text that we want to handle.")
     fidelity: float = Field(
         0.2,
         ge=0.0,
@@ -91,6 +91,9 @@ class SDImg2ImgNode(IImageNode):
         ).numpy()[0]
         image = get_image_from_diffusion_output(diffusion_output)
         return {"image": image}
+
+
+# super resolution (Real-ESRGAN)
 
 
 class Img2ImgSRSettings(BaseModel):
