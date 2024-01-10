@@ -46,15 +46,22 @@ except:
     class InpaintingMode(str, Enum):  # type: ignore
         NORMAL = "normal"
 
-    APIPool = None
-    TranslatorAPI = None
-    ImageHarmonizationAPI = None
-    DiffusionAPI = None
-    ControlledDiffusionAPI = None
-    LaMaAPI = None
-    ISNetAPI = None
-    PromptEnhanceAPI = None
-    BLIPAPI = None
+    class APIPool:  # type: ignore
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def register(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+    class MockAPI:
+        def __getattr__(self, _: str) -> Any:
+            pass
+
+    TranslatorAPI = MockAPI()
+    DiffusionAPI = MockAPI()
+    ControlledDiffusionAPI = MockAPI()
+    ISNetAPI = MockAPI()
+    BLIPAPI = MockAPI()
 
 
 BaseSDTag = "_base_sd"
@@ -116,8 +123,6 @@ def init_sd(**kwargs: Any) -> ControlledDiffusionAPI:
 
 
 def register_sd() -> None:
-    if APIPool is None:
-        return
     get_api_pool().register(APIs.SD, init_sd)
 
 
