@@ -1,0 +1,69 @@
+{
+  "$description": "Get cutout masks from the given urls.\n- Adjust the `urls` and `save_prefix` in the first `node` to process different images and save with different prefixes.\n- The images will be processed concurrently.",
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "urls": [
+            "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/03/31/19/20/dog-4988985_1280.jpg"
+          ],
+          "save_prefix": "sod"
+        }
+      }
+    },
+    {
+      "key": "download",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.urls",
+          "dst_hierarchy": "loop_values.url"
+        }
+      ],
+      "data": {
+        "base_node": "common.download_image",
+        "extract_hierarchy": "image",
+        "verbose": true
+      }
+    },
+    {
+      "key": "sod",
+      "type": "common.loop",
+      "injections": [
+        {
+          "src_key": "download",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "loop_values.url"
+        }
+      ],
+      "data": {
+        "base_node": "ai.img2img.sod",
+        "extract_hierarchy": "image",
+        "verbose": true
+      }
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "sod",
+          "src_hierarchy": "results",
+          "dst_hierarchy": "urls"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ]
+    }
+  ]
+}
