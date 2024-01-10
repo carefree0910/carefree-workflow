@@ -17,6 +17,7 @@ from typing import Optional
 from pathlib import Path
 from pydantic import BaseModel
 from dataclasses import field
+from dataclasses import asdict
 from dataclasses import dataclass
 from cftool.web import get_err_msg
 from cftool.misc import offload
@@ -477,6 +478,10 @@ class Flow(Bundle[Node]):
     -------
     push(node: Node) -> Flow:
         Pushes a node into the workflow.
+    loop(n: int, node: Node, loop_back_injections: List[LoopBackInjection], ...) -> str:
+        Loops the given `node` for `n` times.
+        > Usually this is useful if and only if you want to perform iterative tasks on the same node,
+        in which case `loop_back_injections` should be required.
     gather(*targets: str) -> str:
         Gathers targets into a single node, and returns the key of the node.
     to_json() -> Dict[str, Any]:
@@ -513,6 +518,48 @@ class Flow(Bundle[Node]):
             raise ValueError("node key cannot be None")
         super().push(node.to_item())
         return self
+
+    def loop(
+        self,
+        n: int,
+        node: Node,
+        loop_back_injections: List[LoopBackInjection],
+        *,
+        extract_hierarchy: Optional[str] = None,
+        verbose: bool = False,
+    ) -> str:
+        loop_key = f"$loop_{node.key}_{random_hash()[:4]}"
+        modified_injections: List[Injection] = []
+        for injection in node.injections:
+            modified_injections.append(
+                Injection(
+                    injection.src_key,
+                    injection.src_hierarchy,
+                    f"base_data.{injection.dst_hierarchy}",
+                )
+            )
+        self.push(
+            Node.make(
+                LOOP_NODE,
+                dict(
+                    key=loop_key,
+                    data=dict(
+                        base_node=node.__identifier__,
+                        base_data=shallow_copy_dict(node.data),
+                        loop_values=dict(loop_idx=list(range(n))),
+                        loop_back_injections=None
+                        if loop_back_injections is None
+                        else list(map(asdict, loop_back_injections)),
+                        extract_hierarchy=extract_hierarchy,
+                        verbose=verbose,
+                    ),
+                    injections=modified_injections,
+                    offload=node.offload,
+                    lock_key=node.lock_key,
+                ),
+            )
+        )
+        return loop_key
 
     def gather(self, *targets: str) -> str:
         gather_key = f"$gather_{random_hash()[:4]}"
