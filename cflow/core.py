@@ -708,6 +708,7 @@ class Flow(Bundle[Node]):
 
 __all__ = [
     "Injection",
+    "LoopBackInjection",
     "Schema",
     "Node",
     "Flow",
