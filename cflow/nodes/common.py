@@ -124,11 +124,11 @@ class LoopNode(Node):
             i_data = shallow_copy_dict(base_data)
             for k in loop_keys:
                 i_data[k] = loop_values[k][i]
-            if loop_back_injections is None:
+            if loop_back_injections is None or i == 0:
                 i_injections = []
             else:
                 i_injections = list(map(shallow_copy_dict, loop_back_injections))
-                i_injections = [Injection(**d) for d in i_injections]
+                i_injections = [Injection(str(i - 1), **d) for d in i_injections]
             flow.push(t_node(str(i), i_data, i_injections))
         target = flow.gather(*map(str, range(n)))
         results = await flow.execute(target, verbose=self.data["verbose"])
