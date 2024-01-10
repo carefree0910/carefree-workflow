@@ -75,6 +75,7 @@ class APIs(str, Enum):
     SD = "sd"
     SD_INPAINTING = "sd_inpainting"
     ESR = "esr"
+    ESR_ANIME = "esr_anime"
 
 
 def _base_sd_path() -> str:
@@ -122,6 +123,10 @@ def register_sd() -> None:
 
 def register_esr() -> None:
     get_api_pool().register(APIs.ESR, TranslatorAPI.from_esr)
+
+
+def register_esr_anime() -> None:
+    get_api_pool().register(APIs.ESR_ANIME, TranslatorAPI.from_esr_anime)
 
 
 # enums
