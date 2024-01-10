@@ -18,12 +18,15 @@ from ...core import Node
 from ...core import Schema
 
 
-class Img2ImgSDSettings(BaseModel):
-    text: str = Field(..., description="The text that we want to handle.")
+class WHSettings(BaseModel):
     wh: Tuple[int, int] = Field(
         (0, 0),
-        description="The output size, `0` means as-is",
+        description="The target output size, `0` means as-is",
     )
+
+
+class Img2ImgSDSettings(WHSettings):
+    text: str = Field(..., description="The text that we want to handle.")
     fidelity: float = Field(
         0.2,
         ge=0.0,
