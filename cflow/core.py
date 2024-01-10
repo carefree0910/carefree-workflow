@@ -302,15 +302,22 @@ class Node(ISerializableDataClass, metaclass=ABCMeta):
         copied.from_info(shallow_copy_dict(self.to_info()))
         return copied
 
+    def asdict(self) -> Dict[str, Any]:
+        return dict(
+            key=self.key,
+            data=shallow_copy_dict(self.data),
+            injections=[asdict(injection) for injection in self.injections],
+            offload=self.offload,
+            lock_key=self.lock_key,
+        )
+
     def to_item(self) -> Item["Node"]:
         if self.key is None:
             raise ValueError("node key cannot be None")
         return Item(self.key, self)
 
-    def to_info(self) -> Dict[str, Any]:
-        info = super().to_info()
-        info.pop("executing")
-        return info
+    def to_pack(self) -> Dict[str, Any]:
+        return dict(type=self.__identifier__, info=self.to_info())
 
     def from_info(self, info: Dict[str, Any]) -> None:
         super().from_info(info)
@@ -519,7 +526,7 @@ class Flow(Bundle[Node]):
         return gather_key
 
     def to_json(self) -> List[Dict[str, Any]]:
-        return [item.data.to_pack().asdict() for item in self]
+        return [item.data.to_pack() for item in self]
 
     @classmethod
     def from_json(cls, data: List[Dict[str, Any]]) -> "Flow":
