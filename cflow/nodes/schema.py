@@ -24,7 +24,6 @@ from cftool.web import download_image_with_retry
 
 from ..core import Hook
 from ..core import Node
-from ..core import Flow
 from ..core import Schema
 
 try:
