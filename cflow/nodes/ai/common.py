@@ -122,7 +122,7 @@ def register_sd() -> None:
 
 
 def register_inpainting() -> None:
-    api_pool.register(APIs.INPAINTING, DiffusionAPI.from_inpainting)
+    get_api_pool().register(APIs.INPAINTING, DiffusionAPI.from_inpainting)
 
 
 def register_esr() -> None:
