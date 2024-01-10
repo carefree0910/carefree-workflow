@@ -11,10 +11,14 @@ from typing import List
 from typing import Tuple
 from typing import Optional
 from typing import NamedTuple
+from dataclasses import asdict
 from cftool.data_structures import Item
 
 from .core import Node
 from .core import Flow
+from .server import NodeModel
+from .server import WorkflowModel
+from .server import InjectionModel
 
 
 class ToposortResult(NamedTuple):
@@ -159,8 +163,39 @@ def render_workflow(
     return Image.open(buf)
 
 
+def to_data_model(
+    flow: Flow,
+    *,
+    target: str,
+    intermediate: Optional[List[str]] = None,
+    return_if_exception: bool = False,
+    verbose: bool = False,
+) -> WorkflowModel:
+    nodes: List[NodeModel] = []
+    for node_item in flow:
+        node = node_item.data
+        nodes.append(
+            NodeModel(
+                key=node.key,
+                type=node.__identifier__,
+                data=node.data,
+                injections=[InjectionModel(**asdict(d)) for d in node.injections],
+                offload=node.offload,
+                lock_key=node.lock_key,
+            )
+        )
+    return WorkflowModel(
+        target=target,
+        intermediate=intermediate,
+        nodes=nodes,
+        return_if_exception=return_if_exception,
+        verbose=verbose,
+    )
+
+
 __all__ = [
     "toposort",
     "get_dependency_path",
     "render_workflow",
+    "to_data_model",
 ]
