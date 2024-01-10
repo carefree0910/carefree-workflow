@@ -5,12 +5,14 @@ import numpy as np
 from PIL import Image
 from typing import Dict
 from typing import Tuple
+from typing import Optional
 from pydantic import Field
 from pydantic import BaseModel
 from cftool.cv import to_rgb
 from cftool.cv import to_uint8
 
 from .common import APIs
+from .common import TImage
 from .common import sd_img2img_name
 from .common import register_sd
 from .common import get_sd_from
@@ -18,6 +20,7 @@ from .common import get_api_pool
 from .common import register_esr
 from .common import register_isnet
 from .common import register_esr_anime
+from .common import register_inpainting
 from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
 from .common import get_image_from_diffusion_output
@@ -90,6 +93,55 @@ class Img2ImgSDNode(IImageNode):
             anchor=64,
             **kwargs,
         ).numpy()[0]
+        image = get_image_from_diffusion_output(diffusion_output)
+        return {"image": image}
+
+
+# inpainting (LDM)
+
+
+class Img2ImgInpaintingModel(Img2ImgDiffusionModel):
+    mask_url: TImage = Field(..., description="The inpainting mask.")
+    refine_fidelity: Optional[float] = Field(
+        None,
+        description="""Refine fidelity used in inpainting.
+> If not `None`, we will reference the original image with this fidelity to perform a refinement step.
+""",
+    )
+    max_wh: int = Field(832, description="The maximum resolution.")
+
+
+@Node.register("ai.img2img.inpainting")
+class Img2ImgInpaintingNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = Img2ImgInpaintingModel
+        schema.description = "Use LDM to perform image inpainting."
+        return schema
+
+    @classmethod
+    async def warmup(cls) -> None:
+        register_inpainting()
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        data = Img2ImgInpaintingModel(**self.data)
+        image = await self.get_image_from("url")
+        mask = await self.get_image_from("mask_url")
+        with get_api_pool().use(APIs.INPAINTING) as m:
+            kwargs = handle_diffusion_model(m, data, always_uncond=False)
+            await handle_diffusion_hooks(m, data, self, kwargs)
+            mask_arr = np.array(mask)
+            mask_arr[..., -1] = np.where(mask_arr[..., -1] > 0, 255, 0)
+            mask = Image.fromarray(mask_arr)
+            refine_fidelity = data.refine_fidelity
+            diffusion_output = m.inpainting(
+                image,
+                mask,
+                max_wh=data.max_wh,
+                refine_fidelity=refine_fidelity,
+                **kwargs,
+            ).numpy()[0]
         image = get_image_from_diffusion_output(diffusion_output)
         return {"image": image}
 
@@ -192,8 +244,10 @@ class Img2ImgSODNode(IImageNode):
 
 __all__ = [
     "Img2ImgSDModel",
+    "Img2ImgInpaintingModel",
     "Img2ImgSRModel",
     "Img2ImgSDNode",
+    "Img2ImgInpaintingNode",
     "Img2ImgSRNode",
     "Img2ImgSODNode",
 ]

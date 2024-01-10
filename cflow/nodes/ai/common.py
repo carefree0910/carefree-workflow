@@ -71,6 +71,7 @@ api_pool: APIPool = None
 class APIs(str, Enum):
     SD = "sd"
     SD_INPAINTING = "sd_inpainting"
+    INPAINTING = "inpainting"
     ESR = "esr"
     ESR_ANIME = "esr_anime"
     ISNET = "isnet"
@@ -118,6 +119,10 @@ def register_sd() -> None:
     if APIPool is None:
         return
     get_api_pool().register(APIs.SD, init_sd)
+
+
+def register_inpainting() -> None:
+    api_pool.register(APIs.INPAINTING, DiffusionAPI.from_inpainting)
 
 
 def register_esr() -> None:
