@@ -1,0 +1,82 @@
+{
+  "$description": "Generate an image of the given text with Stable Diffusion, and then perform super resolution on the result.\n- Adjust the `text` and `save_prefix` in the first `node` to process from different text and save with different prefix.\n- Adjust the `w` and `h` in the first `node` to generate images of different size.\n- Adjust the `seed` in the first `node` to generate at different random seed.",
+  "target": "save",
+  "intermediate": [],
+  "verbose": true,
+  "nodes": [
+    {
+      "key": "params",
+      "type": "common.parameters",
+      "data": {
+        "params": {
+          "text": "A lovely little cat.",
+          "w": 512,
+          "h": 512,
+          "seed": 123,
+          "save_prefix": "txt2img_sr"
+        }
+      }
+    },
+    {
+      "key": "txt2img",
+      "type": "ai.txt2img.sd",
+      "injections": [
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.text",
+          "dst_hierarchy": "text"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.w",
+          "dst_hierarchy": "w"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.h",
+          "dst_hierarchy": "h"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.seed",
+          "dst_hierarchy": "seed"
+        }
+      ],
+      "offload": false,
+      "lock_key": null
+    },
+    {
+      "key": "sr",
+      "type": "ai.img2img.sr",
+      "data": {},
+      "injections": [
+        {
+          "src_key": "txt2img",
+          "src_hierarchy": "image",
+          "dst_hierarchy": "url"
+        }
+      ],
+      "offload": false,
+      "lock_key": null
+    },
+    {
+      "key": "save",
+      "type": "debug.save_images",
+      "injections": [
+        {
+          "src_key": "sr",
+          "src_hierarchy": "image",
+          "dst_hierarchy": "urls.0"
+        },
+        {
+          "src_key": "params",
+          "src_hierarchy": "params.save_prefix",
+          "dst_hierarchy": "prefix"
+        }
+      ],
+      "data": {
+        "urls": []
+      }
+    }
+  ]
+}

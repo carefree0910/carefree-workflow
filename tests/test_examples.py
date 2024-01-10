@@ -21,8 +21,8 @@ class TestExample(unittest.TestCase):
 
     def test_workflows(self):
         for path in (examples_folder / "workflows").rglob("*.json"):
-            # skip running openai examples
-            if path.parent.stem != "openai":
+            # skip running ai / openai examples
+            if path.parent.stem not in ("ai", "openai"):
                 subprocess.run(
                     [
                         "cflow",
