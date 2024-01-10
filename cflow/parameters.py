@@ -22,7 +22,7 @@ class OPTClass(OPTBase):
         return dict(
             focus="",
             verbose=True,
-            api_pool_limit=3,
+            api_pool_limit=5,
             num_control_pool=3,
             use_controlnet=False,
             use_controlnet_annotator=False,

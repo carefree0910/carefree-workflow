@@ -16,6 +16,7 @@ from .common import register_sd
 from .common import get_sd_from
 from .common import get_api_pool
 from .common import register_esr
+from .common import register_isnet
 from .common import register_esr_anime
 from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
@@ -165,9 +166,34 @@ class Img2ImgSRNode(IImageNode):
         return {"image": image}
 
 
+# salient object detection (isnet)
+
+
+@Node.register("ai.img2img.sod")
+class Img2ImgSODNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.description = "Salient object detection (cutout)."
+        return schema
+
+    @classmethod
+    async def warmup(cls) -> None:
+        register_isnet()
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        image = await self.get_image_from("url")
+        with get_api_pool().use(APIs.ISNET) as m:
+            rgb = to_rgb(image)
+            alpha = to_uint8(m.segment(rgb))
+        image = Image.fromarray(alpha)
+        return {"image": image}
+
+
 __all__ = [
     "Img2ImgSDModel",
     "Img2ImgSRModel",
     "SDImg2ImgNode",
     "Img2ImgSRNode",
+    "Img2ImgSODNode",
 ]
