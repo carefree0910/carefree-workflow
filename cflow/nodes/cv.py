@@ -201,6 +201,27 @@ class BinaryOpNode(IImageNode):
         return {"image": image}
 
 
+class BinarizeInput(ImageModel):
+    threshold: int = Field(127, description="The threshold of the binarization.")
+
+
+@Node.register("cv.binarize")
+class BinarizeNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = BinarizeInput
+        schema.description = "Binarize an image."
+        return schema
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        array = np.array(await self.get_image_from("url"))
+        threshold = self.data["threshold"]
+        binarized = np.where(array > threshold, 255, 0).astype(np.uint8)
+        image = Image.fromarray(binarized)
+        return {"image": image}
+
+
 class BlurInput(ImageModel):
     radius: int = Field(2, description="Size of the blurring kernel.")
 
@@ -569,6 +590,7 @@ __all__ = [
     "ResamplingModel",
     "BaseAffineModel",
     "BinaryOpNode",
+    "BinarizeNode",
     "BlurNode",
     "InverseNode",
     "GrayscaleNode",
