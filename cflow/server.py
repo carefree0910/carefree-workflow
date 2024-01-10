@@ -19,7 +19,7 @@ from .core import Node
 from .core import Flow
 from .parameters import OPT
 from .nodes.common import to_endpoint
-from .nodes.common import LoopBackInjection
+from .nodes.common import LoopBackInjectionModel
 
 
 def parse_endpoint(t_node: Type[Node]) -> str:
@@ -107,7 +107,7 @@ class SrcKey(BaseModel):
     src_key: str = Field(..., description="The key of the dependent node.")
 
 
-class InjectionModel(LoopBackInjection, SrcKey):
+class InjectionModel(LoopBackInjectionModel, SrcKey):
     pass
 
 

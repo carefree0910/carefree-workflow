@@ -102,6 +102,19 @@ class Injection:
 
 
 @dataclass
+class LoopBackInjection:
+    """
+    A dataclass that represents a loop back injection to the current node.
+
+    > This is the same as `Injection`, except the `src_key` will always be the
+    key of the previous node in the loop.
+    """
+
+    src_hierarchy: Optional[str]
+    dst_hierarchy: str
+
+
+@dataclass
 class Schema:
     """
     A class that represents a Schema of a node.

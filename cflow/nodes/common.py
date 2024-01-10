@@ -31,13 +31,8 @@ from ..core import Injection
 # functional nodes
 
 
-class LoopBackInjection(BaseModel):
-    """
-    A dataclass that represents a loop back injection to the current node.
-
-    > This is the same as `Injection`, except the `src_key` will always be the
-    key of the previous node in the loop.
-    """
+class LoopBackInjectionModel(BaseModel):
+    """Data model of `LoopBackInjection`"""
 
     src_hierarchy: Optional[str] = Field(
         ...,
@@ -78,7 +73,7 @@ For example, if you want to loop `data["a"]` with values `[1, 2]`, and loop `dat
 ```
 """,
     )
-    loop_back_injections: Optional[List[LoopBackInjection]] = Field(
+    loop_back_injections: Optional[List[LoopBackInjectionModel]] = Field(
         None,
         description="The loop back injections.\n"
         "> - If this is set, the results from the previous step in the loop will be "
@@ -304,7 +299,7 @@ def to_endpoint(name: str) -> str:
 
 
 __all__ = [
-    "LoopBackInjection",
+    "LoopBackInjectionModel",
     "LoopNode",
     "GatherNode",
     "EchoNode",

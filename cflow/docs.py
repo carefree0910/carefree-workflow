@@ -334,7 +334,7 @@ Here are some important input data models when you want to use `workflow` in an 
 {inspect.getsource(cflow.SrcKey).replace("`", "'")}```
 
 ```python
-{inspect.getsource(cflow.LoopBackInjection).replace("`", "'")}```
+{inspect.getsource(cflow.LoopBackInjectionModel).replace("`", "'")}```
 
 ```python
 {inspect.getsource(cflow.InjectionModel).replace("`", "'")}```
