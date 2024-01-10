@@ -22,7 +22,7 @@ async def main() -> None:
     h = 512
     text = "A lovely little cat."
     seed = 123
-    flow = Flow().push(SDTxt2ImgNode("txt2img", dict(w=w, h=h, text=text, seed=seed)))
+    flow = Flow().push(Txt2ImgSDNode("txt2img", dict(w=w, h=h, text=text, seed=seed)))
     results = await flow.execute("txt2img", verbose=True)
     results["txt2img"]["image"].save("out.png")
 

@@ -20,7 +20,7 @@ class Txt2ImgSDModel(Txt2ImgDiffusionModel, WHModel):
 
 
 @Node.register(sd_txt2img_name)
-class SDTxt2ImgNode(IImageNode):
+class Txt2ImgSDNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
@@ -45,5 +45,5 @@ class SDTxt2ImgNode(IImageNode):
 
 __all__ = [
     "Txt2ImgSDModel",
-    "SDTxt2ImgNode",
+    "Txt2ImgSDNode",
 ]

@@ -59,7 +59,7 @@ class Img2ImgSDModel(Img2ImgDiffusionModel, Img2ImgSDSettings):
 
 
 @Node.register(sd_img2img_name)
-class SDImg2ImgNode(IImageNode):
+class Img2ImgSDNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
@@ -193,7 +193,7 @@ class Img2ImgSODNode(IImageNode):
 __all__ = [
     "Img2ImgSDModel",
     "Img2ImgSRModel",
-    "SDImg2ImgNode",
+    "Img2ImgSDNode",
     "Img2ImgSRNode",
     "Img2ImgSODNode",
 ]

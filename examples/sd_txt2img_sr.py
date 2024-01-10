@@ -24,7 +24,7 @@ async def main() -> None:
     seed = 123
     flow = (
         Flow()
-        .push(SDTxt2ImgNode("txt2img", dict(w=w, h=h, text=text, seed=seed)))
+        .push(Txt2ImgSDNode("txt2img", dict(w=w, h=h, text=text, seed=seed)))
         .push(Img2ImgSRNode("sr", injections=[Injection("txt2img", "image", "url")]))
     )
     render_workflow(flow).save("workflow.png")
