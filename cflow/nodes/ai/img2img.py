@@ -1,17 +1,28 @@
+import cv2
+
+import numpy as np
+
 from PIL import Image
 from typing import Dict
 from typing import Tuple
 from pydantic import Field
 from pydantic import BaseModel
 from cftool.cv import to_rgb
+from cftool.cv import to_uint8
 
 from .common import APIs
 from .common import sd_img2img_name
 from .common import register_sd
 from .common import get_sd_from
+from .common import get_api_pool
+from .common import register_esr
+from .common import register_esr_anime
 from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
 from .common import get_image_from_diffusion_output
+from .common import TranslatorAPI
+from .common import Img2ImgModel
+from .common import CallbackModel
 from .common import Img2ImgDiffusionModel
 from ..schema import IImageNode
 from ...core import Node
@@ -82,7 +93,78 @@ class SDImg2ImgNode(IImageNode):
         return {"image": image}
 
 
+class Img2ImgSRSettings(BaseModel):
+    is_anime: bool = Field(
+        False,
+        description="Whether the input image is an anime image or not.",
+    )
+    target_w: int = Field(0, description="The target width. 0 means as-is.")
+    target_h: int = Field(0, description="The target height. 0 means as-is.")
+
+
+class Img2ImgSRModel(CallbackModel, Img2ImgSRSettings, Img2ImgModel):
+    max_wh: int = Field(832, description="The maximum resolution.")
+
+
+def apply_sr(
+    m: TranslatorAPI,
+    image: Image.Image,
+    max_wh: int,
+    target_w: int,
+    target_h: int,
+) -> np.ndarray:
+    img_arr = m.sr(image, max_wh=max_wh).numpy()[0]
+    img_arr = img_arr.transpose([1, 2, 0])
+    h, w = img_arr.shape[:2]
+    if target_w and target_h:
+        larger = w * h < target_w * target_h
+        img_arr = cv2.resize(
+            img_arr,
+            (target_w, target_h),
+            interpolation=cv2.INTER_LANCZOS4 if larger else cv2.INTER_AREA,
+        )
+    elif target_w or target_h:
+        if target_w:
+            k = target_w / w
+            target_h = round(h * k)
+        else:
+            k = target_h / h
+            target_w = round(w * k)
+        img_arr = cv2.resize(
+            img_arr,
+            (target_w, target_h),
+            interpolation=cv2.INTER_LANCZOS4 if k > 1 else cv2.INTER_AREA,
+        )
+    return to_uint8(img_arr)
+
+
+@Node.register("ai.img2img.sr")
+class Img2ImgSRNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = Img2ImgSRModel
+        schema.description = "Super resolution."
+        return schema
+
+    @classmethod
+    async def warmup(cls) -> None:
+        register_esr()
+        register_esr_anime()
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        data = Img2ImgSRModel(**self.data)
+        image = await self.get_image_from("url")
+        api_key = APIs.ESR_ANIME if data.is_anime else APIs.ESR
+        with get_api_pool().use(api_key) as m:
+            uint8_image = apply_sr(m, image, data.max_wh, data.target_w, data.target_h)
+        image = Image.fromarray(uint8_image)
+        return {"image": image}
+
+
 __all__ = [
     "Img2ImgSDModel",
+    "Img2ImgSRModel",
     "SDImg2ImgNode",
+    "Img2ImgSRNode",
 ]
