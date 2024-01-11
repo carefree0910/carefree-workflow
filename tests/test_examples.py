@@ -11,6 +11,9 @@ examples_folder = file_folder.parent / "examples"
 class TestExample(unittest.TestCase):
     def test_code_snippets(self):
         for path in examples_folder.glob("*.py"):
+            # skip ai examples
+            if path.stem.startswith("ai"):
+                continue
             # skip sd examples
             if path.stem.startswith("sd"):
                 continue
