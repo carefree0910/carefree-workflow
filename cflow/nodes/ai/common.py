@@ -334,15 +334,18 @@ Number of CLIP layers that we want to skip.
         return self.version
 
 
-class CommonSDInpaintingModel(MaxWHModel):
+class KeepOriginalModel(BaseModel):
     keep_original: bool = Field(
         False,
-        description="Whether strictly keep the original image identical in the output image.",
+        description="Whether to force the un-masked region to be the same as the original image.",
     )
     keep_original_num_fade_pixels: Optional[int] = Field(
-        50,
+        None,
         description="Number of pixels to fade the original image.",
     )
+
+
+class CommonSDInpaintingModel(KeepOriginalModel, MaxWHModel):
     use_raw_inpainting: bool = Field(
         False,
         description="""
