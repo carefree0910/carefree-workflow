@@ -9,7 +9,7 @@
       "type": "common.parameters",
       "data": {
         "params": {
-          "url": "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg",
+          "url": "https://ailab-huawei-cdn.nolibox.com/upload/images/ba4a27c434394bf684890643890970d2.png",
           "seed": 123,
           "fidelity": 0.4,
           "save_prefix": "blip_sd"

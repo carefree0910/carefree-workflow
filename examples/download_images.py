@@ -12,8 +12,8 @@ from cflow import *
 
 
 async def main() -> None:
-    cat_url = "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg"
-    dog_url = "https://cdn.pixabay.com/photo/2020/03/31/19/20/dog-4988985_1280.jpg"
+    cat_url = "https://ailab-huawei-cdn.nolibox.com/upload/images/ba4a27c434394bf684890643890970d2.png"
+    dog_url = "https://ailab-huawei-cdn.nolibox.com/upload/images/4814c36b452f47268ba77d54cc706f88.png"
     flow = (
         Flow()
         .push(DownloadImageNode("cat", dict(url=cat_url)))

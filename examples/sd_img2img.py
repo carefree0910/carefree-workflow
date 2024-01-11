@@ -19,7 +19,7 @@ from cflow import *
 
 async def main() -> None:
     wh = (640, 425)
-    url = "https://cdn.pixabay.com/photo/2016/01/20/13/05/cat-1151519_1280.jpg"
+    url = "https://ailab-huawei-cdn.nolibox.com/upload/images/ba4a27c434394bf684890643890970d2.png"
     text = "A lovely little cat."
     seed = 123
     data = dict(wh=wh, url=url, text=text, seed=seed)
