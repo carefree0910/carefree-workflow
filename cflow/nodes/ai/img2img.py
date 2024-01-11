@@ -10,6 +10,7 @@ from pydantic import Field
 from pydantic import BaseModel
 from cftool.cv import to_rgb
 from cftool.cv import to_uint8
+from cftool.cv import ImageProcessor
 
 from .common import APIs
 from .common import TImage
@@ -25,8 +26,11 @@ from .common import handle_diffusion_model
 from .common import handle_diffusion_hooks
 from .common import get_image_from_diffusion_output
 from .common import TranslatorAPI
+from .common import ImageModel
+from .common import DiffusionModel
 from .common import Img2ImgModel
 from .common import CallbackModel
+from .common import KeepOriginalModel
 from .common import Img2ImgDiffusionModel
 from ..schema import IImageNode
 from ...core import Node
@@ -100,7 +104,7 @@ class Img2ImgSDNode(IImageNode):
 # inpainting (LDM)
 
 
-class Img2ImgInpaintingModel(Img2ImgDiffusionModel):
+class Img2ImgInpaintingSettings(BaseModel):
     mask_url: TImage = Field(..., description="The inpainting mask.")
     refine_fidelity: Optional[float] = Field(
         None,
@@ -109,6 +113,12 @@ class Img2ImgInpaintingModel(Img2ImgDiffusionModel):
 """,
     )
     max_wh: int = Field(832, description="The maximum resolution.")
+
+
+class Img2ImgInpaintingModel(
+    DiffusionModel, KeepOriginalModel, Img2ImgInpaintingSettings, ImageModel
+):
+    pass
 
 
 @Node.register("ai.img2img.inpainting")
@@ -142,8 +152,15 @@ class Img2ImgInpaintingNode(IImageNode):
                 refine_fidelity=refine_fidelity,
                 **kwargs,
             ).numpy()[0]
-        image = get_image_from_diffusion_output(diffusion_output)
-        return {"image": image}
+        output = get_image_from_diffusion_output(diffusion_output)
+        if data.keep_original:
+            fade = data.keep_original_num_fade_pixels
+            output.putalpha(mask)
+            if fade is None:
+                output = Image.alpha_composite(image.convert("RGBA"), output)
+            else:
+                output = ImageProcessor.paste(output, image, num_fade_pixels=fade)
+        return {"image": output}
 
 
 # super resolution (Real-ESRGAN)
