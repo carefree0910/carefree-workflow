@@ -286,9 +286,12 @@ class GrayscaleNode(IImageNode):
         return {"image": image}
 
 
-class ErodeInput(ImageModel):
+class MorphologyInput(ImageModel):
     n_iter: int = Field(1, description="Number of iterations.")
     kernel_size: int = Field(3, description="Size of the kernel.")
+
+
+class ErodeInput(MorphologyInput):
     padding: int = Field(8, description="Padding for the image.")
 
 
