@@ -286,41 +286,29 @@ class GrayscaleNode(IImageNode):
         return {"image": image}
 
 
-class ErodeAlphaInput(ImageModel):
+class ErodeInput(ImageModel):
     n_iter: int = Field(1, description="Number of iterations.")
     kernel_size: int = Field(3, description="Size of the kernel.")
-    threshold: int = Field(0, description="Threshold of the alpha channel.")
     padding: int = Field(8, description="Padding for the image.")
 
 
-@Node.register("cv.erode_alpha")
-class ErodeAlphaNode(IImageNode):
+@Node.register("cv.erode")
+class ErodeNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
-        schema.input_model = ErodeAlphaInput
+        schema.input_model = ErodeInput
         schema.description = "Erode an image."
         return schema
 
     async def execute(self) -> Dict[str, Image.Image]:
-        n_iter = self.data["n_iter"]
-        kernel_size = self.data["kernel_size"]
-        threshold = self.data["threshold"]
         padding = self.data["padding"]
         image = await self.get_image_from("url")
-        w, h = image.size
-        array = np.array(image.convert("RGBA"))
-        alpha = array[..., -1]
-        padded = np.pad(alpha, (padding, padding), constant_values=0)
-        binarized = cv2.threshold(padded, threshold, 255, cv2.THRESH_BINARY)[1]
-        eroded = erode(binarized, n_iter, kernel_size)
+        array = np.array(image)
+        padded = np.pad(array, (padding, padding), constant_values=0)
+        eroded = erode(padded, self.data["n_iter"], self.data["kernel_size"])
         shrinked = eroded[padding:-padding, padding:-padding]
-        merged_alpha = np.minimum(alpha, shrinked)
-        array[..., -1] = merged_alpha
-        rgb = array[..., :3].reshape([-1, 3])
-        rgb[(merged_alpha == 0).ravel()] = 0
-        array[..., :3] = rgb.reshape([h, w, 3])
-        image = Image.fromarray(array)
+        image = Image.fromarray(shrinked)
         return {"image": image}
 
 
@@ -604,7 +592,7 @@ __all__ = [
     "BlurNode",
     "InverseNode",
     "GrayscaleNode",
-    "ErodeAlphaNode",
+    "ErodeNode",
     "ResizeNode",
     "AffineNode",
     "GetMaskNode",
