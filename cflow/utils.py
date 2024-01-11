@@ -86,6 +86,7 @@ def render_workflow(
     workflow: Flow,
     *,
     target: Optional[str] = None,
+    figsize: Optional[Tuple[int, int]] = None,
     fig_w_ratio: int = 4,
     fig_h_ratio: int = 3,
     dpi: int = 200,
@@ -100,9 +101,11 @@ def render_workflow(
         target = workflow.last.key
     in_edges, hierarchy, edge_labels, _ = get_dependency_path(workflow, target)
     # setup plt
-    fig_w = max(fig_w_ratio * len(hierarchy), 8)
-    fig_h = fig_h_ratio * max(map(len, hierarchy))
-    plt.figure(figsize=(fig_w, fig_h), dpi=dpi)
+    if figsize is None and layout == "multipartite_layout":
+        fig_w = max(fig_w_ratio * len(hierarchy), 8)
+        fig_h = fig_h_ratio * max(map(len, hierarchy))
+        figsize = (fig_w, fig_h)
+    plt.figure(figsize=figsize, dpi=dpi)
     box = plt.gca().get_position()
     plt.gca().set_position([box.x0, box.y0, box.width * 0.8, box.height])
     # map key to indices
