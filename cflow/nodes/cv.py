@@ -156,6 +156,23 @@ def paste(
     return to_uint8(rgb), to_uint8(mask[..., 0]), to_uint8(pasted)
 
 
+def get_mask(
+    image: Image.Image,
+    get_inverse: bool,
+    binarize_threshold: Optional[int],
+) -> np.ndarray:
+    if image.mode == "RGBA":
+        mask = np.array(image)[..., -1]
+    else:
+        mask = np.array(image.convert("L"))
+    if get_inverse:
+        mask = 255 - mask
+    if binarize_threshold is not None:
+        mask = np.where(mask > binarize_threshold, 255, 0)
+        mask = mask.astype(np.uint8)
+    return mask
+
+
 def get_contrast_bg(rgba_image: Image.Image) -> int:
     rgba = np.array(rgba_image)
     rgb = rgba[..., :3]
@@ -388,16 +405,9 @@ class GetMaskNode(IImageNode):
 
     async def execute(self) -> Dict[str, Image.Image]:
         image = await self.get_image_from("url")
-        if image.mode == "RGBA":
-            mask = np.array(image)[..., -1]
-        else:
-            mask = np.array(image.convert("L"))
-        if self.data["get_inverse"]:
-            mask = 255 - mask
+        get_inverse = self.data["get_inverse"]
         binarize_threshold = self.data["binarize_threshold"]
-        if binarize_threshold is not None:
-            mask = np.where(mask > binarize_threshold, 255, 0)
-            mask = mask.astype(np.uint8)
+        mask = get_mask(image, get_inverse, binarize_threshold)
         mask_image = Image.fromarray(mask)
         return {"image": mask_image}
 
