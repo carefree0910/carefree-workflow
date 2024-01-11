@@ -577,12 +577,12 @@ class CropImageNode(IImageNode):
         return {"image": image}
 
 
-class PasteModel(BaseModel):
+class PasteModel(ImageModel):
     bg_url: TImage = Field(..., description="The background image.")
     force_rgb: bool = Field(False, description="Whether to force the output to be RGB.")
 
 
-class PasteInput(ResamplingModel, BaseAffineModel, PasteModel, ImageModel):
+class PasteInput(ResamplingModel, BaseAffineModel, PasteModel):
     pass
 
 
