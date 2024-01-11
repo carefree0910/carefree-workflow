@@ -22,8 +22,8 @@ async def main() -> None:
     gathered = flow.gather("cat", "dog")
     results = await flow.execute(gathered, verbose=True)
     render_workflow(flow).save("workflow.png")
-    results[gathered]["cat"]["image"].save("cat.jpg")
-    results[gathered]["dog"]["image"].save("dog.jpg")
+    results[gathered]["cat"]["image"].save("cat.png")
+    results[gathered]["dog"]["image"].save("dog.png")
 
 
 if __name__ == "__main__":
