@@ -400,6 +400,28 @@ class GetMaskNode(IImageNode):
         return {"image": mask_image}
 
 
+class SetAlphaInput(ImageModel):
+    mask_url: TImage = Field(..., description="The target alpha channel.")
+
+
+@Node.register("cv.set_alpha")
+class SetAlphaNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = SetAlphaInput
+        schema.description = "Set the alpha channel of an image."
+        return schema
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        image = await self.get_image_from("url")
+        alpha = await self.get_image_from("mask_url")
+        alpha = Image.fromarray(get_mask(alpha, False, None))
+        image = image.copy()
+        image.putalpha(alpha)
+        return {"image": image}
+
+
 class FillBGInput(ImageModel):
     bg: Optional[Union[int, Tuple[int, int, int]]] = Field(
         None,
@@ -596,6 +618,7 @@ __all__ = [
     "ResizeNode",
     "AffineNode",
     "GetMaskNode",
+    "SetAlphaNode",
     "FillBGNode",
     "GetSizeNode",
     "ModifyBoxNode",
