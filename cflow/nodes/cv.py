@@ -19,6 +19,7 @@ from cftool.cv import to_rgb
 from cftool.cv import to_uint8
 from cftool.cv import to_base64
 from cftool.cv import ImageBox
+from cftool.cv import ImageProcessor
 from cftool.misc import safe_execute
 from cftool.misc import shallow_copy_dict
 from cftool.geometry import Matrix2D
@@ -626,6 +627,34 @@ class PasteNode(IWithImageNode):
         return {"rgb": rgb, "mask": mask, "pasted": pasted}
 
 
+class FadeInput(PasteModel):
+    num_fade_pixels: int = Field(
+        0,
+        ge=0,
+        description="The number of pixels to fade, `0` means a simple paste.",
+    )
+
+
+@Node.register("cv.fade")
+class FadeNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = FadeInput
+        schema.description = "Fade a (rgba) fg into a bg."
+        return schema
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        fg = await self.get_image_from("url")
+        bg = await self.get_image_from("bg_url")
+        fade = self.data["num_fade_pixels"]
+        if fade == 0:
+            image = Image.alpha_composite(bg.convert("RGBA"), fg.convert("RGBA"))
+        else:
+            image = ImageProcessor.paste(fg, bg, num_fade_pixels=fade)
+        return {"image": image}
+
+
 __all__ = [
     "ResizeMode",
     "Resampling",
@@ -650,4 +679,6 @@ __all__ = [
     "ModifyBoxNode",
     "GenerateMasksNode",
     "CropImageNode",
+    "PasteNode",
+    "FadeNode",
 ]
