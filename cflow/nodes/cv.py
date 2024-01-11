@@ -85,6 +85,11 @@ def erode(array: np.ndarray, n_iter: int, kernel_size: int) -> np.ndarray:
     return cv2.erode(array, kernel, iterations=n_iter)
 
 
+def dilate(array: np.ndarray, n_iter: int, kernel_size: int) -> np.ndarray:
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    return cv2.dilate(array, kernel, iterations=n_iter)
+
+
 def resize(image: Image.Image, w: int, h: int, resampling: Resampling) -> Image.Image:
     if resampling == Resampling.NEAREST:
         r = PILResampling.NEAREST
@@ -312,6 +317,23 @@ class ErodeNode(IImageNode):
         eroded = erode(padded, self.data["n_iter"], self.data["kernel_size"])
         shrinked = eroded[padding:-padding, padding:-padding]
         image = Image.fromarray(shrinked)
+        return {"image": image}
+
+
+@Node.register("cv.dilate")
+class DilateNode(IImageNode):
+    @classmethod
+    def get_schema(cls) -> Schema:
+        schema = super().get_schema()
+        schema.input_model = MorphologyInput
+        schema.description = "Dilate an image."
+        return schema
+
+    async def execute(self) -> Dict[str, Image.Image]:
+        image = await self.get_image_from("url")
+        array = np.array(image)
+        dilated = dilate(array, self.data["n_iter"], self.data["kernel_size"])
+        image = Image.fromarray(dilated)
         return {"image": image}
 
 
@@ -618,6 +640,7 @@ __all__ = [
     "InverseNode",
     "GrayscaleNode",
     "ErodeNode",
+    "DilateNode",
     "ResizeNode",
     "AffineNode",
     "GetMaskNode",
