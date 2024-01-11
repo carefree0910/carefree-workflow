@@ -14,7 +14,7 @@ from ...core import Node
 from ...core import Schema
 
 
-class Img2TxtModel(MaxWHModel, ImageModel):
+class Img2TxtInput(MaxWHModel, ImageModel):
     pass
 
 
@@ -22,14 +22,14 @@ class Img2TxtModel(MaxWHModel, ImageModel):
 class Img2TxtCaptionNode(IWithImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
-        return Schema(Img2TxtModel, TextModel, description="Image captioning.")
+        return Schema(Img2TxtInput, TextModel, description="Image captioning.")
 
     @classmethod
     async def warmup(cls) -> None:
         register_blip()
 
     async def execute(self) -> Dict[str, Image.Image]:
-        data = Img2TxtModel(**self.data)
+        data = Img2TxtInput(**self.data)
         image = await self.get_image_from("url")
         w, h = image.size
         w, h = restrict_wh(w, h, data.max_wh)
@@ -41,6 +41,6 @@ class Img2TxtCaptionNode(IWithImageNode):
 
 
 __all__ = [
-    "Img2TxtModel",
+    "Img2TxtInput",
     "Img2TxtCaptionNode",
 ]

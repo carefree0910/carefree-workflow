@@ -40,7 +40,7 @@ from ...core import Schema
 # img2img (stable diffusion)
 
 
-class Img2ImgSDSettings(BaseModel):
+class Img2ImgSDModel(BaseModel):
     text: str = Field(..., description="The text that we want to handle.")
     wh: Tuple[int, int] = Field(
         (0, 0),
@@ -61,7 +61,7 @@ Whether the returned image should keep the alpha-channel of the input image or n
     )
 
 
-class Img2ImgSDModel(Img2ImgDiffusionModel, Img2ImgSDSettings):
+class Img2ImgSDInput(Img2ImgDiffusionModel, Img2ImgSDModel):
     pass
 
 
@@ -70,7 +70,7 @@ class Img2ImgSDNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
-        schema.input_model = Img2ImgSDModel
+        schema.input_model = Img2ImgSDInput
         schema.description = "Use Stable Diffusion to perform image to image."
         return schema
 
@@ -79,7 +79,7 @@ class Img2ImgSDNode(IImageNode):
         register_sd()
 
     async def execute(self) -> Dict[str, Image.Image]:
-        data = Img2ImgSDModel(**self.data)
+        data = Img2ImgSDInput(**self.data)
         image = await self.get_image_from("url")
         if not data.keep_alpha:
             image = to_rgb(image)
@@ -104,7 +104,7 @@ class Img2ImgSDNode(IImageNode):
 # inpainting (LDM)
 
 
-class Img2ImgInpaintingSettings(BaseModel):
+class Img2ImgInpaintingModel(BaseModel):
     mask_url: TImage = Field(..., description="The inpainting mask.")
     refine_fidelity: Optional[float] = Field(
         None,
@@ -115,8 +115,8 @@ class Img2ImgInpaintingSettings(BaseModel):
     max_wh: int = Field(832, description="The maximum resolution.")
 
 
-class Img2ImgInpaintingModel(
-    DiffusionModel, KeepOriginalModel, Img2ImgInpaintingSettings, ImageModel
+class Img2ImgInpaintingInput(
+    DiffusionModel, KeepOriginalModel, Img2ImgInpaintingModel, ImageModel
 ):
     pass
 
@@ -126,7 +126,7 @@ class Img2ImgInpaintingNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
-        schema.input_model = Img2ImgInpaintingModel
+        schema.input_model = Img2ImgInpaintingInput
         schema.description = "Use LDM to perform image inpainting."
         return schema
 
@@ -135,7 +135,7 @@ class Img2ImgInpaintingNode(IImageNode):
         register_inpainting()
 
     async def execute(self) -> Dict[str, Image.Image]:
-        data = Img2ImgInpaintingModel(**self.data)
+        data = Img2ImgInpaintingInput(**self.data)
         image = await self.get_image_from("url")
         mask = await self.get_image_from("mask_url")
         with get_api_pool().use(APIs.INPAINTING) as m:
@@ -166,7 +166,7 @@ class Img2ImgInpaintingNode(IImageNode):
 # super resolution (Real-ESRGAN)
 
 
-class Img2ImgSRSettings(BaseModel):
+class Img2ImgSRModel(BaseModel):
     is_anime: bool = Field(
         False,
         description="Whether the input image is an anime image or not.",
@@ -175,7 +175,7 @@ class Img2ImgSRSettings(BaseModel):
     target_h: int = Field(0, description="The target height. 0 means as-is.")
 
 
-class Img2ImgSRModel(CallbackModel, Img2ImgSRSettings, Img2ImgModel):
+class Img2ImgSRInput(CallbackModel, Img2ImgSRModel, Img2ImgModel):
     max_wh: int = Field(832, description="The maximum resolution.")
 
 
@@ -216,7 +216,7 @@ class Img2ImgSRNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
-        schema.input_model = Img2ImgSRModel
+        schema.input_model = Img2ImgSRInput
         schema.description = "Super resolution."
         return schema
 
@@ -226,7 +226,7 @@ class Img2ImgSRNode(IImageNode):
         register_esr_anime()
 
     async def execute(self) -> Dict[str, Image.Image]:
-        data = Img2ImgSRModel(**self.data)
+        data = Img2ImgSRInput(**self.data)
         image = await self.get_image_from("url")
         api_key = APIs.ESR_ANIME if data.is_anime else APIs.ESR
         with get_api_pool().use(api_key) as m:
@@ -260,9 +260,9 @@ class Img2ImgSODNode(IImageNode):
 
 
 __all__ = [
-    "Img2ImgSDModel",
-    "Img2ImgInpaintingModel",
-    "Img2ImgSRModel",
+    "Img2ImgSDInput",
+    "Img2ImgInpaintingInput",
+    "Img2ImgSRInput",
     "Img2ImgSDNode",
     "Img2ImgInpaintingNode",
     "Img2ImgSRNode",

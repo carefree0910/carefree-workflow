@@ -15,7 +15,7 @@ from ...core import Node
 from ...core import Schema
 
 
-class Txt2ImgSDModel(Txt2ImgDiffusionModel, WHModel):
+class Txt2ImgSDInput(Txt2ImgDiffusionModel, WHModel):
     pass
 
 
@@ -24,7 +24,7 @@ class Txt2ImgSDNode(IImageNode):
     @classmethod
     def get_schema(cls) -> Schema:
         schema = super().get_schema()
-        schema.input_model = Txt2ImgSDModel
+        schema.input_model = Txt2ImgSDInput
         schema.description = "Use Stable Diffusion to generate image from text."
         return schema
 
@@ -33,7 +33,7 @@ class Txt2ImgSDNode(IImageNode):
         register_sd()
 
     async def execute(self) -> Dict[str, Image.Image]:
-        data = Txt2ImgSDModel(**self.data)
+        data = Txt2ImgSDInput(**self.data)
         m = get_sd_from(APIs.SD, data)  # type: ignore
         size = data.w, data.h
         kwargs = handle_diffusion_model(m, data)
@@ -44,6 +44,6 @@ class Txt2ImgSDNode(IImageNode):
 
 
 __all__ = [
-    "Txt2ImgSDModel",
+    "Txt2ImgSDInput",
     "Txt2ImgSDNode",
 ]
