@@ -34,7 +34,7 @@ async def main() -> None:
         )
     )
     results = await flow.execute("merge", verbose=True)
-    render_workflow(flow).save("workflow.png")
+    render_workflow(flow, layout="circular_layout").save("workflow.png")
     results["dog"]["image"].save("dog.png")
     results["mask"]["image"].save("mask.png")
     results["erode"]["image"].save("mask_eroded.png")
