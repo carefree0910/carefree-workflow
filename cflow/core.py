@@ -513,6 +513,10 @@ class Flow(Bundle[Node]):
 
     __repr__ = __str__
 
+    @property
+    def shared_pool(self) -> Dict[str, Any]:
+        return _shared_pool
+
     def push(self, node: Node) -> "Flow":
         if node.key is None:
             raise ValueError("node key cannot be None")
