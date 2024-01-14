@@ -717,6 +717,7 @@ class Flow(Bundle[Node]):
         all_latencies: Dict[str, Dict[str, float]] = {}
         if intermediate is None:
             intermediate = []
+        reachable_nodes: List[Node] = []
         try:
             workflow = self.copy()
             reachable = workflow.get_reachable(target)
@@ -745,10 +746,6 @@ class Flow(Bundle[Node]):
                     if item.key in reachable
                 )
             )
-            for node in reachable_nodes:
-                if verbose:
-                    console.debug(f"cleaning up node '{node.key}'")
-                await node.cleanup()
             extra_results[EXCEPTION_MESSAGE_KEY] = None
         except Exception as err:
             if not return_if_exception:
@@ -757,6 +754,11 @@ class Flow(Bundle[Node]):
             extra_results[EXCEPTION_MESSAGE_KEY] = err_msg
             if verbose:
                 console.error(err_msg)
+        finally:
+            for node in reachable_nodes:
+                if verbose:
+                    console.debug(f"cleaning up node '{node.key}'")
+                await node.cleanup()
         self.latest_latencies = all_latencies
         extra_results[ALL_LATENCIES_KEY] = all_latencies
         final_results = api_results if return_api_response else all_results
