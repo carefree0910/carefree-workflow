@@ -758,7 +758,11 @@ class Flow(Bundle[Node]):
             for node in reachable_nodes:
                 if verbose:
                     console.debug(f"cleaning up node '{node.key}'")
-                await node.cleanup()
+                try:
+                    await node.cleanup()
+                except Exception as err:
+                    msg = f"error occurred when cleaning up node '{node.key}': {get_err_msg(err)}"
+                    console.error(msg)
         self.latest_latencies = all_latencies
         extra_results[ALL_LATENCIES_KEY] = all_latencies
         final_results = api_results if return_api_response else all_results
