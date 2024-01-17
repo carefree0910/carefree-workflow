@@ -12,7 +12,6 @@ or
 to use these nodes.
 """
 
-from PIL import Image
 from typing import Dict
 from typing import Optional
 from pydantic import Field
@@ -20,7 +19,6 @@ from pydantic import BaseModel
 
 from .schema import TextModel
 from .schema import ImageModel
-from .schema import ImageAPIOuput
 from .schema import IWithOpenAINode
 from ..core import Node
 from ..core import Schema
