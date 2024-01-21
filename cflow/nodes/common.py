@@ -304,6 +304,7 @@ __all__ = [
     "LoopNode",
     "GatherNode",
     "EchoNode",
+    "ParametersNode",
     "DownloadImageNode",
     "SaveImageNode",
     "SaveImagesNode",
